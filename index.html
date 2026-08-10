@@ -439,6 +439,16 @@
   .shilat-banner { position:sticky; top:0; z-index:49; background:var(--amber); color:#fff;
     text-align:center; font-size:13px; font-weight:600; padding:7px 14px; display:none; }
   body.role-shilat .shilat-banner { display:block; }
+  /* חיווי סנכרון — נראה רק למנהל */
+  #syncBadge { position:fixed; bottom:22px; inset-inline-end:22px; z-index:56; display:none;
+    max-width:min(360px,86vw); background:rgba(255,255,255,.96); border:1px solid var(--line);
+    border-inline-start:4px solid var(--amber); border-radius:12px; padding:11px 15px;
+    font-size:13px; font-weight:600; color:var(--text); box-shadow:var(--shadow-lg);
+    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); line-height:1.5; }
+  body.host #syncBadge { display:block; }
+  #syncBadge.bad { border-inline-start-color:var(--red); color:var(--red); }
+  #syncBadge.ok  { border-inline-start-color:var(--green); }
+
   .shilat-banner button { background:rgba(255,255,255,.22); color:#fff; border:1px solid rgba(255,255,255,.5);
     border-radius:999px; padding:2px 14px; margin-inline-start:12px; font:inherit; font-size:12.5px;
     font-weight:600; cursor:pointer; transition:background-color .2s var(--ease); }
@@ -2863,12 +2873,26 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
       </div>
       <div class="field" style="margin-bottom:10px;"><label>מה לעשות איתו</label><input id="llNote" placeholder="לצפות ולסכם בשלוש שורות"></div>
       <button class="btn" id="llAdd">שליחה</button>
+      <div class="field" style="margin-top:18px;">
+        <label>📱 מספר הוואטסאפ שלך — הדרך הפשוטה</label>
+        <input id="llPhone" placeholder="972501234567 (בלי אפס בהתחלה, בלי מקפים)">
+      </div>
+      <button class="btn" id="llPhoneSave">שמירת המספר</button>
+      <div class="adv-lock">ברגע שיש מספר, כפתור השליחה של שילת פותח לך את התשובות בוואטסאפ. לא צריך שום מפתח וזה תמיד עובד.</div>
+
+      <div class="field" style="margin-top:20px;">
+        <label>מפתח כתיבה לתיבת ההודעות — לא חובה, רק אם רוצים שליחה אוטומטית לגמרי</label>
+        <input id="llKey" type="password" placeholder="בלעדיו התשובות של שילת לא יגיעו אליך">
+      </div>
+      <button class="btn ghost small" id="llKeySave">שמירת המפתח</button>
+      <div class="adv-lock">המפתח נשמר בקובץ האתר וניתן לקריאה במקור. השתמש ב-Access Key מוגבל לעדכון התיבה בלבד — לעולם לא ב-Master Key.</div>
       <span id="llMsg" style="font-size:13px;color:var(--green);margin-inline-start:8px;"></span>
     </div>
 
     <div id="libBooks"></div>
 
     <h3 class="sub-title" style="margin-top:34px;">📥 תשובות שהוגשו</h3>
+    <div id="libRemote"></div>
     <div id="libSubmissions"></div>
 
     <p class="back-line"><a class="btn ghost" href="#home">→ חזרה לדף הבית</a></p>
@@ -3364,7 +3388,10 @@ const store = {
     catch(e){ alert("השמירה נכשלה — ייתכן שנגמר המקום בדפדפן (תמונות גדולות). מחק ניתוח ישן ונסה שוב."); }
   }
 };
-function persist(){ store.set(state); }
+function persist(){
+  store.set(state);
+  if(typeof autoPublish==="function") autoPublish();
+}
 
 /* ---------- routing ---------- */
 function route(){
@@ -4042,12 +4069,13 @@ document.getElementById("publishBtn").addEventListener("click",function(){
    CLOUD SYNC (jsonbin.io) — host publishes, everyone reads
    ============================================================ */
 const CLOUD_LS="sachran_cloud_v1";
-const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","sketches","libLinks","bsTopics","habitsCustomised","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","publishedAt","cloudBin"];
+const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","libLinks","bsTopics","habitsCustomised","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","publishedAt","cloudBin"];
 function cloudCfg(){ try{ return JSON.parse(localStorage.getItem(CLOUD_LS))||{}; }catch(e){ return {}; } }
 function cloudSave(c){ try{ localStorage.setItem(CLOUD_LS,JSON.stringify(c)); }catch(e){} }
 function cloudPayload(){
   const p={};
   CONTENT_KEYS.forEach(function(k){ p[k]=state[k]; });
+  if(typeof window.sachranSlimForCloud==="function") window.sachranSlimForCloud(p, arguments[0]);
   /* personal data (trades, proc, calib, blindLog) never leaves the device */
   /* jsonbin free tier limit is 100KB per update — keep newest chart images, drop oldest as needed */
   p.analyses=(state.analyses||[]).map(function(a){ const c=Object.assign({},a); if(c.imgBin) c.img=null; return c; });
@@ -4077,6 +4105,58 @@ function cloudPayload(){
   cloudPayload.dropped=dropped;
   return p;
 }
+/* ---- פרסום אוטומטי: כל שינוי של המנהל נדחף לענן מיד ---- */
+let autoPubTimer=null, autoPubBusy=false;
+function autoPublish(){
+  if(!isHost()) return;
+  const key=(cloudCfg()||{}).key;
+  if(!key || !state.cloudBin){
+    if(typeof window.sachranCloudNote==="function")
+      window.sachranCloudNote("⚠ לא מחובר לענן — מה שתוסיף לא יגיע לשילת. הדבק Master Key בתחתית הדף.",true);
+    return;
+  }
+  clearTimeout(autoPubTimer);
+  autoPubTimer=setTimeout(function(){
+    if(autoPubBusy) { clearTimeout(autoPubTimer); autoPubTimer=setTimeout(autoPublish,1500); return; }
+    autoPubBusy=true;
+    state.publishedAt=Date.now(); store.set(state);
+    if(typeof window.sachranCloudNote==="function") window.sachranCloudNote("מסנכרן…");
+
+    const LADDER=[null,900000,400000,180000,92000];   /* מלא → מוקטן בהדרגה */
+    let step=0;
+    function attempt(){
+      const payload=cloudPayload(LADDER[step]);
+      const kb=Math.round(new Blob([JSON.stringify(payload)]).size/1024);
+      const trimmed=(payload.cloudTrimmed||[]).length;
+      return fetch("https://api.jsonbin.io/v3/b/"+state.cloudBin,{
+        method:"PUT",
+        headers:{"Content-Type":"application/json","X-Master-Key":key},
+        body:JSON.stringify(payload)
+      }).then(function(r){ return r.text().then(function(t){
+        const tooBig = (r.status===400||r.status===413) && /size|large|limit|exceed/i.test(t);
+        if(tooBig && step<LADDER.length-1){
+          step++;
+          try{ localStorage.setItem("sachran_cloud_limit",String(LADDER[step])); }catch(e){}
+          if(typeof window.sachranCloudNote==="function")
+            window.sachranCloudNote("המטען היה גדול מדי ("+kb+"KB) — מקטין ומנסה שוב…");
+          return attempt();
+        }
+        if(!r.ok) throw new Error("HTTP "+r.status+" "+t.slice(0,120));
+        const note = trimmed
+          ? "סונכרן ✓ "+kb+"KB — חלק מהארכיון הכבד לא נכלל (הוא ממילא בקובץ עצמו)"
+          : "סונכרן ✓ "+kb+"KB — הכל עבר, שילת והגולשים רואים את זה";
+        if(typeof window.sachranCloudNote==="function") window.sachranCloudNote(note);
+        cloudStatus("סונכרן אוטומטית ✓ "+new Date().toLocaleTimeString("he-IL")+" ("+kb+"KB)");
+      });});
+    }
+    attempt().catch(function(e){
+      if(typeof window.sachranCloudNote==="function") window.sachranCloudNote("הסנכרון נכשל: "+e.message,true);
+      cloudStatus("הסנכרון האוטומטי נכשל: "+e.message,true);
+    }).then(function(){ autoPubBusy=false; });
+  },900);
+}
+window.autoPublish=autoPublish;
+
 function cloudStatus(msg,bad){
   const el=document.getElementById("cloudStatus");
   if(el){ el.textContent=msg; el.style.color=bad?"var(--red)":"var(--green)"; }
@@ -4143,6 +4223,8 @@ function cloudPull(){
       persist();
       renderTexts(); renderAnalyses(); renderSummaries();
       renderLessons(); renderRecordings(); renderNotebooks(); renderPicks(); renderVideos(); renderAdminNotes(); renderHostJournal(); renderSiteLinks(); renderTradePlan();
+      if(typeof window.sachranRenderAll==="function") window.sachranRenderAll();
+      if(typeof window.sachranCloudNote==="function") window.sachranCloudNote("עודכן מהענן ✓");
     }
   }).catch(function(){});
 }
@@ -6947,25 +7029,99 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
       m2.lib[book.id].lastDone = today();
       m2.libSubs = (m2.libSubs || []).concat([rec]);
       saveMe(m2);
-      el("libSendMsg").textContent = "נשמר ונשלח ✓"; el("libSendMsg").style.color = "var(--green)";
-      pushToInbox(rec);
-      setTimeout(function () { renderLibToday(); renderLibSubs(); }, 600);
+      el("libSendMsg").textContent = "נשמר. שולח ליאיר…"; el("libSendMsg").style.color = "var(--muted)";
+      pushToInbox(rec).then(function (ok) {
+        if (ok) {
+          el("libSendMsg").textContent = "נשלח ליאיר ✓";
+          el("libSendMsg").style.color = "var(--green)";
+        } else if ((state.texts || {}).hostPhone) {
+          el("libSendMsg").textContent = "נשמר ✓ — עכשיו שלחי ליאיר";
+          el("libSendMsg").style.color = "var(--green)";
+          deliveryFallback(form, rec);
+        } else {
+          el("libSendMsg").textContent = "נשמר אצלך, אבל השליחה לא עברה";
+          el("libSendMsg").style.color = "var(--red)";
+          deliveryFallback(form, rec);
+        }
+        setTimeout(function () { renderLibToday(); renderLibSubs(); }, 1800);
+      });
     };
   }
-  function pushToInbox(rec) {
-    if (typeof inboxUrl !== "function" || !inboxUrl()) return;
-    var text = "📕 סיכום פרק — " + rec.book + "\n" + rec.chapter + "\n\n" +
+  function subText(rec) {
+    return "📕 סיכום פרק — " + rec.book + "\n" + rec.chapter + "\n\n" +
       rec.answers.map(function (a, i) { return (i + 1) + ". " + QUESTIONS[i] + "\n→ " + a; }).join("\n\n");
-    fetch(inboxUrl() + "/latest", { headers: { "X-Bin-Meta": "false" } })
-      .then(function (r) { return r.json(); })
+  }
+  function inboxKey() {
+    return (state.texts && (state.texts.inboxKey || state.texts.hostKeyForInbox)) ||
+           (function () { try { return (JSON.parse(localStorage.getItem("sachran_cloud_v1")) || {}).key || ""; } catch (e) { return ""; } })();
+  }
+  /* שולח את התשובות ליאיר. מחזיר הבטחה שנפתרת ל-true רק אם זה באמת הגיע. */
+  function pushToInbox(rec) {
+    if (typeof inboxUrl !== "function" || !inboxUrl()) return Promise.resolve(false);
+    var key = inboxKey();
+    if (!key) return Promise.resolve(false);
+    var hdr = { "Content-Type": "application/json", "X-Master-Key": key, "X-Access-Key": key };
+    return fetch(inboxUrl() + "/latest", { headers: { "X-Bin-Meta": "false", "X-Master-Key": key, "X-Access-Key": key } })
+      .then(function (r) { return r.ok ? r.json() : { items: [] }; })
       .then(function (d) {
         var items = (d && d.items) || [];
-        items.unshift({ name: rec.who, text: text, at: rec.at });
-        return fetch(inboxUrl(), { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: items }) });
-      }).catch(function () {});
+        items.unshift({ name: rec.who, text: subText(rec), at: rec.at });
+        return fetch(inboxUrl(), { method: "PUT", headers: hdr, body: JSON.stringify({ items: items }) });
+      })
+      .then(function (r) { return !!(r && r.ok); })
+      .catch(function () { return false; });
+  }
+  /* גיבוי שתמיד עובד: העתקה ושליחה בוואטסאפ */
+  function deliveryFallback(host, rec) {
+    var t = subText(rec);
+    var box = document.createElement("div");
+    box.className = "explain";
+    box.style.marginTop = "14px";
+    box.innerHTML = (state.texts && state.texts.hostPhone)
+      ? "<b>התשובות נשמרו.</b> לחצי כאן כדי לשלוח אותן ליאיר:"
+      : "<b>התשובות נשמרו אצלך.</b> השליחה האוטומטית לא עברה — שלחי אותן כך:";
+    var row = document.createElement("div");
+    row.className = "admin-row";
+    var copy = document.createElement("button");
+    copy.className = "btn small"; copy.textContent = "העתקת התשובות";
+    copy.onclick = function () {
+      navigator.clipboard.writeText(t).then(function () { copy.textContent = "הועתק ✓"; },
+        function () { window.prompt("העתיקי את הטקסט:", t); });
+    };
+    var phone = (state.texts && state.texts.hostPhone) || "";
+    var wa = document.createElement("button");
+    wa.className = phone ? "btn small" : "btn ghost small";
+    wa.textContent = phone ? "שליחה ליאיר בוואטסאפ" : "שליחה בוואטסאפ";
+    wa.onclick = function () {
+      window.open("https://wa.me/" + phone + "?text=" + encodeURIComponent(t), "_blank", "noopener");
+    };
+    row.appendChild(copy); row.appendChild(wa);
+    box.appendChild(row);
+    host.appendChild(box);
   }
   function renderLibSubs() {
     var box = el("libSubmissions"); if (!box) return;
+    /* יאיר: מושך את מה ששילת שלחה מהתיבה בענן */
+    if (document.body.classList.contains("host") && typeof inboxUrl === "function" && inboxUrl()) {
+      var k = inboxKey();
+      fetch(inboxUrl() + "/latest", { headers: { "X-Bin-Meta": "false", "X-Master-Key": k, "X-Access-Key": k } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          var items = (d && d.items) || [];
+          var got = items.filter(function (it) { return /סיכום פרק/.test(it.text || ""); });
+          var head = el("libRemote");
+          if (!head) return;
+          if (!got.length) { head.innerHTML = "<div class='panel' style='color:var(--muted);font-size:14px;'>עוד לא הגיעו תשובות מהתיבה.</div>"; return; }
+          head.innerHTML = "";
+          got.forEach(function (it) {
+            var d2 = document.createElement("details");
+            d2.innerHTML = "<summary>📥 " + esc(it.name || "שילת") + " <span class='lbl-en'>" +
+              new Date(it.at || Date.now()).toLocaleDateString("he-IL") + "</span></summary>" +
+              "<div class='d-body'><div class='hj-body'>" + esc(it.text || "") + "</div></div>";
+            head.appendChild(d2);
+          });
+        }).catch(function () {});
+    }
     var mine = me(); var subs = (mine.libSubs || []).slice().reverse();
     if (!subs.length) { box.innerHTML = "<div class='panel' style='color:var(--muted);font-size:14px;'>עוד לא הוגשו תשובות.</div>"; return; }
     box.innerHTML = "";
@@ -7132,6 +7288,19 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
       el("llTitle").value = el("llUrl").value = el("llNote").value = "";
       el("llMsg").textContent = "נשלח ✓"; persist(); renderLibLinks();
     });
+    on("llPhoneSave", function () {
+      var v = el("llPhone").value.replace(/[^0-9]/g, "");
+      state.texts.hostPhone = v;
+      el("llMsg").textContent = v ? "המספר נשמר ✓ — עכשיו התשובות שלה יגיעו לוואטסאפ שלך" : "המספר נוקה";
+      persist();
+    });
+    on("llKeySave", function () {
+      var v = el("llKey").value.trim();
+      state.texts.inboxKey = v;
+      el("llKey").value = "";
+      persist();
+      el("llMsg").textContent = v ? "המפתח נשמר ✓" : "המפתח נוקה";
+    });
     on("icAdd", function () {
       var k = el("icKey").value.trim(); if (!k) return;
       state.ictCustom.push({ k: k, he: el("icHe").value.trim(), en: el("icEn").value.trim(), grp: el("icGrp").value.trim() });
@@ -7152,6 +7321,33 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
   }
 
   /* ============================ שומר גישה ============================ */
+  /* ---- חיווי סנכרון ---- */
+  var badge = document.createElement("div");
+  badge.id = "syncBadge";
+  badge.textContent = "בודק חיבור לענן…";
+  document.body.appendChild(badge);
+  var badgeTimer = null;
+  window.sachranCloudNote = function (msg, bad) {
+    badge.textContent = msg;
+    badge.className = bad ? "bad" : (/\u2713/.test(msg) ? "ok" : "");
+    clearTimeout(badgeTimer);
+    if (!bad) badgeTimer = setTimeout(checkCloud, 9000);
+  };
+  function checkCloud() {
+    if (!document.body.classList.contains("host")) return;
+    var key = "";
+    try { key = (JSON.parse(localStorage.getItem("sachran_cloud_v1")) || {}).key || ""; } catch (e) {}
+    if (!key || !state.cloudBin) {
+      badge.className = "bad";
+      badge.textContent = "⚠ לא מחובר לענן. מה שתוסיף נשמר רק אצלך — שילת לא תראה את זה. גלול לתחתית הדף והדבק Master Key.";
+    } else {
+      badge.className = "ok";
+      badge.textContent = "מחובר לענן ✓ כל שינוי שתעשה מסונכרן אוטומטית לשילת ולגולשים.";
+    }
+  }
+  window.sachranCheckCloud = checkCloud;
+  setTimeout(checkCloud, 1500);
+
   var so = el("shilatOut");
   if (so) so.addEventListener("click", function () {
     sessionStorage.removeItem("hs-host"); sessionStorage.removeItem("hs-role");
@@ -7178,6 +7374,69 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
     wire();
   }
   window.sachranRenderAll = renderAll;
+
+  /* מסיר מהמטען לענן כל מה שזהה לברירת המחדל שכבר נמצאת בקובץ אצל כולם.
+     כך רק השינויים של יאיר עוברים ברשת, והמטען נשאר קטן. */
+  window.sachranSlimForCloud = function (p, forceLimit) {
+    if (!p) return p;
+    function same(a, b) { try { return JSON.stringify(a) === JSON.stringify(b); } catch (e) { return false; } }
+
+    if (same(p.routine, DEF_ROUTINE)) delete p.routine;
+    if (same(p.habits, DEF_HABITS)) delete p.habits;
+    if (same(p.moneyTopics, DEF_MONEY)) delete p.moneyTopics;
+    if (same(p.advSources, DEF_ADV)) delete p.advSources;
+    if (same(p.bsTopics, DEF_BS)) delete p.bsTopics;
+    if (same(p.books, DEF_BOOKS)) delete p.books;
+
+    /* בהסברי המושגים שולחים רק את מה שנערך או שצורף לו גרף */
+    function slimNotes(notes, defs) {
+      if (!notes) return undefined;
+      var out = {}, n = 0;
+      Object.keys(notes).forEach(function (k) {
+        var v = notes[k] || {};
+        var changed = (v.txt && v.txt !== defs[k]) || (v.img && v.img.length);
+        if (changed) { out[k] = v; n++; }
+      });
+      return n ? out : undefined;
+    }
+    var i = slimNotes(p.ictNotes, DEF_ICT_NOTES);
+    if (i) p.ictNotes = i; else delete p.ictNotes;
+    var w = slimNotes(p.wyckNotes, DEF_WYCK_NOTES);
+    if (w) p.wyckNotes = w; else delete p.wyckNotes;
+
+    delete p.sketches;   /* שרטוטים כבדים מדי לענן */
+
+    /* ---- גזימה לפי עדיפות עד שנכנסים למגבלת 100KB של השכבה החינמית ----
+       מה שיאיר מקצה לשילת חייב לעבור. הארכיון הכבד (סיכומים, שיעורים, ניתוחים)
+       ממילא מוטמע ב-index.html ומגיע לכולם דרך הקובץ עצמו. */
+    function size() { try { return new Blob([JSON.stringify(p)]).size; } catch (e) { return 0; } }
+    /* המגבלה נלמדת מהשרת: מתחילים גבוה (מתאים לפרו) ויורדים רק אם נדחינו בגלל גודל */
+    var LIMIT = 900000;
+    try { LIMIT = parseInt(localStorage.getItem("sachran_cloud_limit"), 10) || 900000; } catch (e) {}
+    if (forceLimit) LIMIT = forceLimit;
+    p.cloudTrimmed = [];
+
+    function stripImages(key) {
+      if (size() <= LIMIT || !Array.isArray(p[key])) return;
+      p[key] = p[key].map(function (o) {
+        var c = Object.assign({}, o);
+        if (c.img && String(c.img).length > 400) { c.img = null; c.imgOmitted = true; }
+        return c;
+      });
+      p.cloudTrimmed.push(key + ":images");
+    }
+    ["lessons", "analyses", "hostJournal", "summaries", "picks", "videos"].forEach(stripImages);
+
+    /* מוצא אחרון: משמיטים ארכיון כבד לגמרי. המקבל שומר את מה שיש לו בקובץ. */
+    ["summaries", "lessons", "analyses", "hostJournal"].forEach(function (key) {
+      if (size() > LIMIT && p[key] !== undefined) {
+        delete p[key];
+        p.cloudTrimmed.push(key + ":omitted");
+      }
+    });
+    if (!p.cloudTrimmed.length) delete p.cloudTrimmed;
+    return p;
+  };
 
   function boot() {
     if (typeof state === "undefined") { setTimeout(boot, 200); return; }
