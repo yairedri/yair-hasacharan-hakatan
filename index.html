@@ -654,6 +654,44 @@
   .adv-url:hover { border-bottom-style:solid; }
 
   /* ---------- ספריית מנהלים ---------- */
+  /* מדף ספרים */
+  .shelf { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:16px; margin:18px 0; }
+  .book-card { background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:20px 18px; cursor:pointer; box-shadow:var(--shadow-sm); position:relative;
+    border-inline-start:5px solid var(--amber);
+    transition:transform .26s var(--ease), box-shadow .26s var(--ease); }
+  .book-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
+  .book-card .bk-ico { font-size:26px; }
+  .book-card .bk-name { font-weight:700; font-size:16px; margin:8px 0 4px; line-height:1.4; }
+  .book-card .bk-n { font-size:12.5px; color:var(--muted); }
+  .back-bar { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+  .back-bar button { background:var(--panel); border:1px solid var(--line); border-radius:999px;
+    padding:7px 16px; font:inherit; font-size:13.5px; font-weight:600; color:var(--amber);
+    cursor:pointer; box-shadow:var(--shadow-sm); transition:transform .2s var(--ease); }
+  .back-bar button:hover { transform:translateX(4px); background:var(--sky-soft); }
+  .detail-head { border-inline-start:4px solid var(--amber); padding-inline-start:16px; margin-bottom:20px; }
+  .detail-head h2 { font-family:'Frank Ruhl Libre',Georgia,serif; font-size:clamp(22px,4vw,30px); margin:0 0 6px; }
+  .knowledge { background:var(--sky-soft); border-radius:14px; padding:18px 20px; margin:16px 0;
+    font-size:15.5px; line-height:1.8; white-space:pre-line; }
+
+  /* סוגי ימים ביומן */
+  .day-tabs { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
+  .day-tabs button { background:var(--panel); border:1px solid var(--line); border-radius:999px;
+    padding:8px 18px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer;
+    transition:all .2s var(--ease); }
+  .day-tabs button.on { background:var(--amber); color:#fff; border-color:var(--amber); }
+  .hj-entry.k-hard  { border-inline-start:5px solid var(--red); }
+  .hj-entry.k-green { border-inline-start:5px solid var(--green); }
+  .hj-entry.k-reg   { border-inline-start:5px solid var(--muted); }
+  .hj-entry { cursor:pointer; }
+  .kind-tag { font-size:11.5px; font-weight:700; border-radius:999px; padding:2px 11px; margin-inline-start:8px; }
+  .kind-tag.hard  { color:#fff; background:var(--red); }
+  .kind-tag.green { color:#fff; background:var(--green); }
+  .kind-tag.reg   { color:var(--muted); border:1px solid var(--line); }
+  .bias-box { background:var(--bg2); border:1px solid var(--line); border-radius:12px;
+    padding:13px 15px; margin-top:12px; }
+  .bias-box h5 { margin:0 0 6px; font-size:13.5px; color:var(--amber); }
+
   /* שיעורי בית */
   .hw-card { background:var(--panel); border:1px solid var(--line); border-inline-start:4px solid var(--amber);
     border-radius:16px; padding:20px 22px; margin-bottom:14px; box-shadow:var(--shadow-sm); }
@@ -1477,7 +1515,7 @@ https://docs.google.com/spreadsheets/d/1yRTn7A8J0uOn-nXH_uZJ3Hd5CUWWe-Wr__DZEGaI
       <h3>הסיכומים שלי — פרק אחר פרק</h3>
       <p style="font-size:13.5px; color:var(--muted); margin-top:0;">כאן אני מסכם בעצמי, פרק-פרק, עם מסקנה ראשית ומשנית לכל פרק. בודק ה-AI נותן ציון, מוצא מסקנות שהוחמצו, שואל שאלות העמקה ומציע העשרה.</p>
       <div class="form-row">
-        <div class="field"><label>הספר</label><input id="smBook" placeholder="למשל: הברבור השחור"></div>
+        <div class="field"><label>הספר</label><select id="smBook"></select></div>
         <div class="field"><label>הפרק</label><input id="smChapter" placeholder="מספר או שם הפרק"></div>
       </div>
       <div class="field" style="margin-bottom:10px;"><label>מסקנה ראשית של הפרק</label><input id="smMain" placeholder="המסקנה החשובה ביותר במשפט אחד"></div>
@@ -1487,6 +1525,17 @@ https://docs.google.com/spreadsheets/d/1yRTn7A8J0uOn-nXH_uZJ3Hd5CUWWe-Wr__DZEGaI
       <span id="smMsg" style="font-size:13px; color:var(--red); margin-inline-start:10px;"></span>
     </div>
 
+    <div id="libDetail"></div>
+    <div id="bookShelf"></div>
+    <div class="panel host-only block">
+      <h3>➕ הוספת ספר חדש למדף</h3>
+      <div class="form-row">
+        <div class="field" style="flex:2;"><label>שם הספר</label><input id="shelfName" placeholder="למשל: לחשוב מהר, לחשוב לאט"></div>
+        <div class="field"><label>אימוג׳י</label><input id="shelfIcon" maxlength="4" placeholder="📗"></div>
+      </div>
+      <button class="btn" id="shelfAdd">הוספת ספר</button>
+      <span id="shelfMsg" style="font-size:13px;color:var(--green);margin-inline-start:8px;"></span>
+    </div>
     <div id="summariesList"><div class="an-item"><div class="an-date">2026-07-29</div><h4>אנטי שביר — ספר שלישי</h4><div class="concl-line"><b>מסקנה ראשית:</b> רעיונות</div><div class="concl-line"><b>מסקנה משנית:</b> פרקים בפשטות</div><div class="an-body" style="margin-top: 10px;"># אנטי-שביר — Book III במלואו: המדריך המקיף
 
 &gt; נסים ניקולס טאלב, *Antifragile: Things That Gain from Disorder* (2012), Random House.
@@ -2720,11 +2769,23 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <button class="btn small ghost" id="hjPic">📷 צרף תמונה</button>
         <span id="hjPicStatus" style="font-size:12.5px; color:var(--muted);"></span>
-        <button class="btn" id="hjAdd">פרסום ביומן</button>
+                 <div class="field" style="margin-bottom:10px;"><label>סוג היום</label>
+           <select id="hjKind">
+             <option value="reg">יום רגיל</option>
+             <option value="hard">יום קשה</option>
+             <option value="green">יום ירוק</option>
+           </select>
+         </div>
+         <div class="field" style="margin-bottom:10px;"><label>מה חוויתי</label><textarea id="hjFelt" rows="2" placeholder="מה עבר עליי בפועל"></textarea></div>
+         <div class="field" style="margin-bottom:10px;"><label>הטיות קוגניטיביות שזיהיתי</label><textarea id="hjBias" rows="2" placeholder="מסחר נקמה, אישוש, עוגן, הימנעות מהפסד..."></textarea></div>
+         <div class="field" style="margin-bottom:10px;"><label>מה אעשה אחרת</label><textarea id="hjNext" rows="2"></textarea></div>
+<button class="btn" id="hjAdd">פרסום ביומן</button>
         <span id="hjMsg" style="font-size:13px; color:var(--green);"></span>
       </div>
     </div>
 
+    <div id="hjDetail"></div>
+    <div class="day-tabs" id="hjTabs"></div>
     <div id="hjList"><div class="hj-entry"><div class="hj-meta">⚪ 2026-07-30</div><h4>אימון ממוקד בק' טסט</h4><div class="hj-body">היום ביצעתי אימון ממוקד ושמתי לב שבדרכ אני סוטה מהכללים שהגדרתי למשל כשניתחתי מפת זמן גדולה יותר שמתי לב שאני לא עומד בכללים ואני משנה דעות כל רגע ושככה לא עובדים ולכן אני הולך לבנות שיטת עבודה לבק טסט ואדביק אותה פה</div><button class="admin-link host-only">מחיקת רשומה</button></div><div class="hj-entry"><div class="hj-meta">🔴 2026-07-28</div><h4>מסחר נקמה</h4><div class="hj-body">בדרכ אני לא מעלה פאקים שלי אבל אני חושב שזה היה חשוב אציג כאן מה הרגשתי וכן היום סחרתי מתוך נקמה אחרי הטרייד הראשון 
 1: תכננתי לונג על הזהב לאחר שבוע של ביצועים גרועים ולאחר מכן הפסדתי ובצעתי ריטסט בטענה ש"הצדקה טכנית" לאחר מכן הפסדתי שוב היה לי קשה לקבל את ההפסד כי חשבתי שאני צודק למרות שלא הצהרתי על זה אבל בפנים ידעתי ולאחר מכן בצעתי עוד אחת היום אני סוגר את היום עם מינוס 3 אחוז על התיק משהו שיהיה קשה להחזיר וכל זה בגלל שלא יכולתי לקבל את הסיכון ומכאן אתם יכולים להבין שלסחור הרבה זה הפסדי לרוב אפילו אם זה מתוכנן שתיים זה מגביר את הסיכוי למסחר נקמה 
 2. זה יגרום לכם לעלות סיכונים במידה ואין לכם שליטה פשוט לסגור את המחשב היה לי חשוב להיות כנה ולהציג לכם את הצד השני שיש במסחר</div><button class="admin-link host-only">מחיקת רשומה</button></div><div class="hj-entry"><div class="hj-meta">💡 2026-07-26</div><h4>ניהול זמן</h4><div class="hj-body">חשבתי על זה הרבה האם להוסיף את זה לאתר אבל בסוף החלטתי שכן ניהול זמן ולמה הוא חשוב כסוחרים
@@ -4104,7 +4165,7 @@ document.getElementById("publishBtn").addEventListener("click",function(){
    CLOUD SYNC (jsonbin.io) — host publishes, everyone reads
    ============================================================ */
 const CLOUD_LS="sachran_cloud_v1";
-const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","libLinks","bsTopics","habitsCustomised","homework","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","publishedAt","cloudBin"];
+const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","libLinks","bsTopics","habitsCustomised","homework","bookShelf","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","publishedAt","cloudBin"];
 function cloudCfg(){ try{ return JSON.parse(localStorage.getItem(CLOUD_LS))||{}; }catch(e){ return {}; } }
 function cloudSave(c){ try{ localStorage.setItem(CLOUD_LS,JSON.stringify(c)); }catch(e){} }
 function cloudPayload(){
@@ -5323,14 +5384,19 @@ document.getElementById("hjAdd").addEventListener("click",function(){
     id:Date.now(), date:new Date().toISOString().slice(0,10),
     mood:document.getElementById("hjMood").value,
     title:document.getElementById("hjTitle").value.trim(),
-    body:body, img:hjImg
+    body:body, img:hjImg,
+    kind:(document.getElementById("hjKind")||{}).value||"reg",
+    felt:((document.getElementById("hjFelt")||{}).value||"").trim(),
+    bias:((document.getElementById("hjBias")||{}).value||"").trim(),
+    next:((document.getElementById("hjNext")||{}).value||"").trim()
   });
+  ["hjFelt","hjBias","hjNext"].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=""; });
   hjImg=null;
   document.getElementById("hjTitle").value=""; document.getElementById("hjBody").value="";
   document.getElementById("hjPicStatus").textContent="";
   document.getElementById("hjMsg").textContent="נוסף ליומן ✓ — אל תשכח ☁ פרסום לענן";
   setTimeout(function(){ document.getElementById("hjMsg").textContent=""; },6000);
-  renderHostJournal(); persist();
+  renderHostJournal(); persist(); if(typeof window.sachranRenderAll==="function") window.sachranRenderAll();
 });
 function renderHostJournal(){
   const list=document.getElementById("hjList"); list.innerHTML="";
@@ -6669,6 +6735,12 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
     if (!state.sketches) state.sketches = {};
     if (!state.libLinks) state.libLinks = [];
     if (!state.homework) state.homework = [];
+    if (!state.bookShelf) state.bookShelf = [];
+    /* כל ספר שכבר יש לו סיכומים נכנס למדף אוטומטית */
+    (state.summaries || []).forEach(function (s) {
+      if (s.book && !state.bookShelf.some(function (b) { return b.name === s.book; }))
+        state.bookShelf.push({ name: s.book, icon: "📗", intro: "" });
+    });
     if (!state.bsTopics || !state.bsTopics.length) state.bsTopics = DEF_BS.slice();
     return true;
   }
@@ -7270,7 +7342,7 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
 
   /* ============================ חיווט טפסים ============================ */
   function wire() {
-    function on(id, fn) { var e = el(id); if (e && !e.dataset.w) { e.dataset.w = "1"; e.addEventListener("click", fn); } }
+    function on(id, fn) { var e = el(id); if (e) { e.onclick = fn; } }
     on("rtAdd", function () {
       var t = el("rtTime").value.trim(), w = el("rtWhat").value.trim();
       if (!t || !w) return;
@@ -7324,6 +7396,16 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
       el("llTitle").value = el("llUrl").value = el("llNote").value = "";
       el("llMsg").textContent = "נשלח ✓"; persist(); renderLibLinks();
     });
+    on("shelfAdd", function () {
+      var n = el("shelfName").value.trim(); if (!n) return;
+      if ((state.bookShelf || []).some(function (b) { return b.name === n; })) {
+        el("shelfMsg").textContent = "הספר כבר במדף."; return;
+      }
+      state.bookShelf.push({ name: n, icon: el("shelfIcon").value.trim() || "📗", intro: "" });
+      el("shelfName").value = el("shelfIcon").value = "";
+      el("shelfMsg").textContent = "נוסף למדף ✓";
+      persist(); renderShelf(); fillBookSelect();
+    });
     on("hwAdd", function () {
       var t = el("hwTitle").value.trim();
       var qs = el("hwQs").value.split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
@@ -7366,6 +7448,188 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
       state.libTasks.push(t); el("lbTask").value = ""; el("lbMsg").textContent = "נוספה ✓";
       persist(); renderLibBooks();
     });
+  }
+
+  /* ============================ מדף הספרים ============================ */
+  function sumsOf(name) {
+    return (state.summaries || []).map(function (s, i) { return { s: s, i: i }; })
+      .filter(function (x) { return x.s.book === name; });
+  }
+  function backBar(label, target) {
+    var bar = document.createElement("div"); bar.className = "back-bar";
+    var b = document.createElement("button");
+    b.innerHTML = "→ " + label;
+    b.onclick = function () { location.hash = target; };
+    bar.appendChild(b); return bar;
+  }
+  function renderShelf() {
+    var box = el("bookShelf"); if (!box) return;
+    var det = el("libDetail");
+    var m = (location.hash || "").match(/^#(book|sum)-(.+)$/);
+    var list = el("summariesList");
+    if (list) list.style.display = "none";
+
+    if (m) { box.style.display = "none"; renderLibDetail(m[1], decodeURIComponent(m[2])); return; }
+    box.style.display = "";
+    if (det) det.innerHTML = "";
+
+    var shelf = state.bookShelf || [];
+    if (!shelf.length) { box.innerHTML = "<div class='panel' style='color:var(--muted);font-size:14px;'>המדף עוד ריק.</div>"; return; }
+    box.innerHTML = "<div class='shelf'></div>";
+    var grid = box.querySelector(".shelf");
+    shelf.forEach(function (bk, bi) {
+      var n = sumsOf(bk.name).length;
+      var c = document.createElement("div"); c.className = "book-card";
+      c.innerHTML = "<div class='bk-ico'>" + esc(bk.icon || "📗") + "</div>" +
+        "<div class='bk-name'>" + esc(bk.name) + "</div>" +
+        "<div class='bk-n'>" + (n ? n + " סיכומים" : "עוד אין סיכומים") + "</div>";
+      c.onclick = function () { location.hash = "#book-" + encodeURIComponent(bk.name); };
+      if (document.body.classList.contains("host")) {
+        var del = document.createElement("button");
+        del.className = "admin-link"; del.textContent = "הסרה מהמדף";
+        del.style.marginTop = "8px";
+        del.onclick = function (e) { e.stopPropagation();
+          if (!confirm("להסיר את הספר מהמדף? הסיכומים עצמם לא יימחקו.")) return;
+          state.bookShelf.splice(bi, 1); persist(); renderShelf(); };
+        c.appendChild(del);
+      }
+      grid.appendChild(c);
+    });
+  }
+  function renderLibDetail(kind, key) {
+    var det = el("libDetail"); if (!det) return;
+    det.innerHTML = "";
+    if (kind === "book") {
+      var bk = (state.bookShelf || []).filter(function (b) { return b.name === key; })[0];
+      if (!bk) { det.innerHTML = "<div class='panel'>הספר לא נמצא.</div>"; return; }
+      det.appendChild(backBar("חזרה למדף", "#library"));
+      var head = document.createElement("div"); head.className = "detail-head";
+      head.innerHTML = "<h2>" + esc(bk.icon || "📗") + " " + esc(bk.name) + "</h2>" +
+        "<div class='hw-meta'>" + sumsOf(bk.name).length + " סיכומים</div>";
+      det.appendChild(head);
+      if (bk.intro) {
+        var k = document.createElement("div"); k.className = "knowledge";
+        k.textContent = bk.intro; det.appendChild(k);
+      }
+      if (document.body.classList.contains("host")) {
+        var ed = document.createElement("div"); ed.className = "panel host-only block";
+        ed.innerHTML = "<h3>הידע על הספר — נכתב על ידך</h3>" +
+          "<div class='field'><label>מה חשוב לדעת לפני שקוראים</label><textarea rows='5'></textarea></div>";
+        var ta = ed.querySelector("textarea"); ta.value = bk.intro || "";
+        var sv = document.createElement("button"); sv.className = "btn small"; sv.textContent = "שמירה";
+        sv.style.marginTop = "10px";
+        sv.onclick = function () { bk.intro = ta.value.trim(); persist(); renderShelf(); };
+        ed.appendChild(sv); det.appendChild(ed);
+      }
+      var rows = sumsOf(bk.name);
+      if (!rows.length) det.innerHTML += "<div class='panel' style='color:var(--muted);font-size:14px;'>עוד לא נכתבו סיכומים לספר הזה.</div>";
+      rows.forEach(function (x) {
+        var c = document.createElement("div"); c.className = "hw-card";
+        c.innerHTML = "<div class='hw-meta'>" + esc(x.s.date || "") + "</div>" +
+          "<div class='hw-title'>" + esc(x.s.chapter || "פרק") + "</div>" +
+          "<div class='sl-note'>" + esc((x.s.main || "").slice(0, 110)) + "</div>";
+        c.style.cursor = "pointer";
+        c.onclick = function () { location.hash = "#sum-" + x.i; };
+        det.appendChild(c);
+      });
+    } else {
+      var s = (state.summaries || [])[parseInt(key, 10)];
+      if (!s) { det.innerHTML = "<div class='panel'>הסיכום לא נמצא.</div>"; return; }
+      det.appendChild(backBar("חזרה לספר", "#book-" + encodeURIComponent(s.book || "")));
+      var hd = document.createElement("div"); hd.className = "detail-head";
+      hd.innerHTML = "<h2>" + esc(s.chapter || "") + "</h2><div class='hw-meta'>" +
+        esc(s.book || "") + " · " + esc(s.date || "") + "</div>";
+      det.appendChild(hd);
+      var body = document.createElement("div"); body.className = "an-item";
+      var inner = "";
+      if (s.main) inner += "<div class='concl-line'><b>מסקנה ראשית:</b> " + esc(s.main) + "</div>";
+      if (s.secondary) inner += "<div class='concl-line'><b>מסקנה משנית:</b> " + esc(s.secondary) + "</div>";
+      inner += "<div class='an-body' style='margin-top:12px;'>" + esc(s.body || "") + "</div>";
+      if (s.review) inner += "<div class='review-box'><div class='rv-head'>בדיקת AI</div>" + esc(s.review) + "</div>";
+      body.innerHTML = inner; det.appendChild(body);
+    }
+  }
+  function fillBookSelect() {
+    var sel = el("smBook"); if (!sel || sel.tagName !== "SELECT") return;
+    var cur = sel.value;
+    sel.innerHTML = "";
+    (state.bookShelf || []).forEach(function (b) {
+      var o = document.createElement("option"); o.value = b.name; o.textContent = b.name; sel.appendChild(o);
+    });
+    if (cur) sel.value = cur;
+  }
+
+  /* ============================ יומן המנהל ============================ */
+  var HJ_KINDS = { reg: ["יום רגיל", "reg"], hard: ["יום קשה", "hard"], green: ["יום ירוק", "green"] };
+  var hjFilter = "all";
+  function renderHjTabs() {
+    var box = el("hjTabs"); if (!box) return;
+    var m = (location.hash || "").match(/^#hj-(.+)$/);
+    box.style.display = m ? "none" : "";
+    box.innerHTML = "";
+    [["all", "הכול"], ["reg", "יום רגיל"], ["hard", "יום קשה"], ["green", "יום ירוק"]].forEach(function (t) {
+      var b = document.createElement("button");
+      b.textContent = t[1];
+      if (hjFilter === t[0]) b.className = "on";
+      b.onclick = function () { hjFilter = t[0]; renderHjTabs(); renderHjList(); };
+      box.appendChild(b);
+    });
+  }
+  function renderHjList() {
+    var list = el("hjList"); if (!list) return;
+    var det = el("hjDetail");
+    var m = (location.hash || "").match(/^#hj-(.+)$/);
+    if (m) {
+      list.style.display = "none";
+      renderHjDetail(parseInt(m[1], 10));
+      return;
+    }
+    list.style.display = "";
+    if (det) det.innerHTML = "";
+    var all = state.hostJournal || [];
+    list.innerHTML = "";
+    var rows = all.map(function (e, i) { return { e: e, i: i }; })
+      .filter(function (x) { return hjFilter === "all" || (x.e.kind || "reg") === hjFilter; });
+    if (!rows.length) {
+      list.innerHTML = "<div style='color:var(--muted);font-size:14px;padding:8px 4px;'>אין רשומות בקטגוריה הזאת.</div>";
+      return;
+    }
+    rows.forEach(function (x) {
+      var k = x.e.kind || "reg";
+      var d = document.createElement("div"); d.className = "hj-entry k-" + k;
+      d.innerHTML = "<div class='hj-meta'>" + esc(x.e.date || "") +
+        "<span class='kind-tag " + k + "'>" + HJ_KINDS[k][0] + "</span></div>" +
+        (x.e.title ? "<h4>" + esc(x.e.title) + "</h4>" : "") +
+        "<div class='hj-body'>" + esc((x.e.body || "").slice(0, 160)) + ((x.e.body || "").length > 160 ? "…" : "") + "</div>" +
+        "<div class='sl-open' style='margin-top:8px;'>קריאה מלאה ←</div>";
+      d.onclick = function () { location.hash = "#hj-" + x.i; };
+      list.appendChild(d);
+    });
+  }
+  function renderHjDetail(i) {
+    var det = el("hjDetail"); if (!det) return;
+    var e = (state.hostJournal || [])[i];
+    det.innerHTML = "";
+    if (!e) { det.innerHTML = "<div class='panel'>הרשומה לא נמצאה.</div>"; return; }
+    det.appendChild(backBar("חזרה ליומן", "#hjournal"));
+    var k = e.kind || "reg";
+    var hd = document.createElement("div"); hd.className = "detail-head";
+    hd.innerHTML = "<h2>" + esc(e.title || "רשומה") + "</h2><div class='hw-meta'>" + esc(e.date || "") +
+      " <span class='kind-tag " + k + "'>" + HJ_KINDS[k][0] + "</span></div>";
+    det.appendChild(hd);
+    var card = document.createElement("div"); card.className = "hj-entry k-" + k;
+    card.style.cursor = "default";
+    var html = "<div class='hj-body'>" + esc(e.body || "") + "</div>";
+    if (e.felt) html += "<div class='bias-box'><h5>מה חוויתי</h5><div class='hj-body'>" + esc(e.felt) + "</div></div>";
+    if (e.bias) html += "<div class='bias-box'><h5>הטיות קוגניטיביות שזיהיתי</h5><div class='hj-body'>" + esc(e.bias) + "</div></div>";
+    if (e.next) html += "<div class='bias-box'><h5>מה אעשה אחרת</h5><div class='hj-body'>" + esc(e.next) + "</div></div>";
+    card.innerHTML = html;
+    if (e.img) {
+      var im = document.createElement("img"); im.src = e.img; im.alt = e.title || "תמונה";
+      im.onclick = function () { if (typeof openLightbox === "function") openLightbox(e.img); };
+      card.appendChild(im);
+    }
+    det.appendChild(card);
   }
 
   /* ============================ שיעורי בית ============================ */
@@ -7554,6 +7818,26 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
     applyHost(); location.hash = "#home";
   });
 
+  function libRoute() {
+    var m = (location.hash || "").match(/^#(book|sum)-/);
+    if (!m) return false;
+    document.querySelectorAll(".page").forEach(function (p) {
+      p.style.display = (p.getAttribute("data-page") === "library") ? "block" : "none";
+    });
+    document.body.setAttribute("data-theme", "library");
+    window.scrollTo(0, 0);
+    return true;
+  }
+  function hjRoute() {
+    if (!/^#hj-/.test(location.hash || "")) return false;
+    document.querySelectorAll(".page").forEach(function (p) {
+      p.style.display = (p.getAttribute("data-page") === "hjournal") ? "block" : "none";
+    });
+    document.body.setAttribute("data-theme", "hjournal");
+    window.scrollTo(0, 0);
+    return true;
+  }
+
   function hwRoute() {
     var m = (location.hash || "").match(/^#hw-(.+)$/);
     if (!m) return null;
@@ -7588,6 +7872,7 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
     renderLabels(WYCK_GROUPS, "wyckNotes", "wyckList");
     renderAdv(); renderLibLinks(); renderLibBooks(); renderLibToday(); renderLibSubs(); renderNotifBar();
     renderHwList(); renderHwOne(hwRoute());
+    fillBookSelect(); renderShelf(); renderHjTabs(); renderHjList();
     wire();
   }
   window.sachranRenderAll = renderAll;
@@ -7657,8 +7942,8 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
 
   function boot() {
     if (typeof state === "undefined") { setTimeout(boot, 200); return; }
-    renderAll(); guardLib();
-    window.addEventListener("hashchange", function () { guardLib(); setTimeout(renderAll, 60); });
+    renderAll(); guardLib(); libRoute(); hjRoute();
+    window.addEventListener("hashchange", function () { guardLib(); libRoute(); hjRoute(); setTimeout(renderAll, 60); });
     window.addEventListener("hs-host-change", function () { setTimeout(renderAll, 60); });
     setInterval(notifyTick, 60000);
     notifyTick();
