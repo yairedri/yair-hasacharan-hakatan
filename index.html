@@ -1634,6 +1634,53 @@ https://docs.google.com/spreadsheets/d/1yRTn7A8J0uOn-nXH_uZJ3Hd5CUWWe-Wr__DZEGaI
     <h2 class="title">הספרים שבונים סוחר אינטליגנטי</h2>
     <p class="lead">אלה לא סיכומים שמחליפים קריאה — הם מסות מקוריות שמזקקות את הרעיונות המרכזיים ומתרגמות אותם ליישום אמיתי בשווקים. מי שרוצה את העומק המלא קורא את הספר. אין קיצורי דרך, זוכרים?</p>
 
+    <style>
+      #protoWrap{border:2px solid var(--sky);background:var(--sky-soft);}
+      #protoWrap h3{margin-top:0;}
+      .proto-bar{height:8px;border-radius:99px;background:#fff;border:1px solid var(--line);overflow:hidden;margin:10px 0 16px;}
+      .proto-bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--btn1),var(--btn2));width:0;transition:width .35s var(--ease);}
+      .proto-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:10px;}
+      .proto-mode{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+      .proto-mode button{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:99px;padding:6px 14px;font:inherit;font-size:13.5px;cursor:pointer;}
+      .proto-mode button.on{background:var(--btn2);color:#fff;border-color:var(--btn2);}
+      .proto-step{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+      .proto-step.done{opacity:.55;}
+      .proto-step.done .proto-body{display:none;}
+      .proto-step.locked{opacity:.32;}
+      .proto-step.locked .proto-body{display:none;}
+      .proto-head{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15.5px;}
+      .proto-num{flex:0 0 26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--sky-soft);color:var(--sky-deep);font-size:13px;}
+      .proto-step.done .proto-num{background:var(--green);color:#fff;}
+      .proto-note{font-size:13.5px;color:var(--muted);margin:8px 0 10px;line-height:1.55;}
+      .proto-clock{font-variant-numeric:tabular-nums;font-size:26px;font-weight:800;letter-spacing:1px;margin:6px 0 10px;color:var(--sky-deep);}
+      .proto-clock.ready{color:var(--green);}
+      .proto-step textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:14px;resize:vertical;}
+      .proto-err{color:var(--red);font-size:13px;margin-top:8px;min-height:16px;}
+      .proto-ok{color:var(--green);font-size:13px;margin-top:8px;}
+      .proto-princ{margin-bottom:8px;}
+      .proto-princ label{display:block;font-size:13px;color:var(--muted);margin-bottom:3px;}
+      .proto-princ input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;padding:9px;font:inherit;font-size:14px;}
+      .proto-princ input.bad{border-color:var(--red);}
+      .proto-princ input.good{border-color:var(--green);}
+      #protoGate{border:1px dashed var(--red);border-radius:10px;padding:10px 12px;font-size:13.5px;color:var(--red);margin-top:12px;}
+      #protoGate.open{border-color:var(--green);color:var(--green);}
+    </style>
+
+    <div class="panel host-only block" id="protoWrap">
+      <h3>🔒 פרוטוקול הלמידה — לפני כל הגשה</h3>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:0;">חמישה שלבים, כ-20 דקות. כל שלב נפתח רק אחרי שקודמו הושלם. שלבים עם טיימר לא ניתנים לדילוג. אי אפשר לשמור סיכום עד שהאחרון סומן.</p>
+      <div class="proto-mode">
+        <button type="button" id="protoReset">איפוס המחזור</button>
+      </div>
+      <div class="proto-meta">
+        <span>מחזורים שהושלמו: <b id="protoCycles">0</b></span>
+        <span>הושלם לאחרונה: <b id="protoLast">—</b></span>
+      </div>
+      <div class="proto-bar"><i id="protoBar"></i></div>
+      <div id="protoSteps"></div>
+      <div id="protoGate">הטופס נעול.</div>
+    </div>
+
     <div class="panel host-only block">
       <h3>הסיכומים שלי — פרק אחר פרק</h3>
       <p style="font-size:13.5px; color:var(--muted); margin-top:0;">כאן אני מסכם בעצמי, פרק-פרק, עם מסקנה ראשית ומשנית לכל פרק. בודק ה-AI נותן ציון, מוצא מסקנות שהוחמצו, שואל שאלות העמקה ומציע העשרה.</p>
@@ -9094,4 +9141,249 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
 })();
 </script>
 
+
+<script>
+/* ============================================================
+   PROTOCOL GATE — steps must be completed before a new summary
+   Storage is independent of the site state (key: hs-protocol-v1)
+   ============================================================ */
+(function(){
+  var KEY = "hs-protocol-v1";
+
+  var PRINCIPLES = [
+    { label: "עיקרון 1 — מה עושים אחרי כל פרק",            tests: [/סוגר|סגור|לסגור/, /מקור|ספר|דף/] },
+    { label: "עיקרון 2 — לוח החזרות",                      tests: [/1/, /3/, /7/, /21/] },
+    { label: "עיקרון 3 — מה אומרת תחושת הקלות",            tests: [/קל|קלות/, /אזהר|סימן רע|לא הצלח/] },
+    { label: "עיקרון 4 — מה עושים עם החומר תוך שבוע",      tests: [/מלמד|ללמד|לימדתי|למד/, /7|שבע/] },
+    { label: "עיקרון 5 — הכלי היחיד שמעלה יכולת קוגניטיבית", tests: [/לימוד|למידה|שנות|אקדמ/, /פורמל|מסגרת|תואר/] }
+  ];
+
+  var STEPS = [
+    { id:"recall", t:"שליפה חופשית — דף סגור", min:10, input:1, chars:150,
+      n:"סגור את הספר. כתוב מהזיכרון כל מה שאתה זוכר מהמקטע שלמדת. אל תפתח שום מקור עד שהטיימר נגמר. [Rowland 2014; Dunlosky 2013]" },
+    { id:"gap",    t:"בדיקה מול המקור — רישום הפער", input:1, chars:60,
+      n:"עכשיו פתח את המקור והשווה. כתוב כאן רק את מה שפספסת — זה חומר החזרה שלך." },
+    { id:"sp",     t:"חזרה מרווחת — ימים 1 / 3 / 7 / 21", min:10,
+      n:"חזור על החומר מלפני יום, שלושה, שבעה ועשרים ואחד. מהזיכרון קודם, בדיקה אחר כך. [Cepeda et al. 2006]" },
+    { id:"ii",     t:"כוונת ביצוע למחר", input:1, chars:40,
+      n:"נסח משפט אחד בפורמט: כאשר יקרה X — אני אבצע Y. טריגר קונקרטי, לא כוונה כללית. [Gollwitzer & Sheeran 2006]" },
+    { id:"pr",     t:"רישום העקרונות מהזיכרון", princ:1,
+      n:"בלי רמזים ובלי העתקה. זה השער האחרון." }
+  ];
+
+  function load(){
+    try { var r = localStorage.getItem(KEY); if(r) return JSON.parse(r); } catch(e){}
+    return { idx:0, deadlines:{}, cycles:0, last:"", answers:{} };
+  }
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(P)); } catch(e){} }
+  var P = load();
+
+  function steps(){ return STEPS; }
+  function complete(){ return P.idx >= steps().length; }
+  function pad(n){ return (n<10?"0":"") + n; }
+  function left(id){
+    var d = P.deadlines[id];
+    if(!d) return null;
+    return Math.max(0, Math.ceil((d - Date.now())/1000));
+  }
+
+  var wrap, box, bar, gate, cyc, lastEl;
+
+  function render(){
+    if(!box) return;
+    var S = steps();
+    box.innerHTML = "";
+
+    S.forEach(function(s, i){
+      var el = document.createElement("div");
+      el.className = "proto-step" + (i < P.idx ? " done" : (i > P.idx ? " locked" : ""));
+
+      var head = document.createElement("div");
+      head.className = "proto-head";
+      head.innerHTML = "<span class='proto-num'>" + (i < P.idx ? "\u2713" : (i+1)) + "</span><span>" +
+                       s.t + (s.min ? " \u00B7 " + s.min + " דק\u05F3" : "") + "</span>";
+      el.appendChild(head);
+
+      var body = document.createElement("div");
+      body.className = "proto-body";
+      el.appendChild(body);
+
+      if(i !== P.idx){ box.appendChild(el); return; }
+
+      if(s.n){
+        var note = document.createElement("div");
+        note.className = "proto-note";
+        note.textContent = s.n;
+        body.appendChild(note);
+      }
+
+      var err = document.createElement("div");
+      err.className = "proto-err";
+
+      /* ---- timer ---- */
+      var clock = null, startBtn = null;
+      if(s.min){
+        clock = document.createElement("div");
+        clock.className = "proto-clock";
+        body.appendChild(clock);
+
+        startBtn = document.createElement("button");
+        startBtn.className = "btn small";
+        startBtn.type = "button";
+        startBtn.textContent = "התחלת הטיימר";
+        startBtn.onclick = function(){
+          P.deadlines[s.id] = Date.now() + s.min*60000;
+          save(); render();
+        };
+        if(!P.deadlines[s.id]) body.appendChild(startBtn);
+      }
+
+      /* ---- free text ---- */
+      var ta = null;
+      if(s.input){
+        ta = document.createElement("textarea");
+        ta.rows = 5;
+        ta.placeholder = "כתוב כאן \u2014 מינימום " + s.chars + " תווים.";
+        ta.value = P.answers[s.id] || "";
+        ta.oninput = function(){ P.answers[s.id] = ta.value; save(); };
+        body.appendChild(ta);
+      }
+
+      /* ---- principles ---- */
+      var inputs = [];
+      if(s.princ){
+        PRINCIPLES.forEach(function(p, k){
+          var w = document.createElement("div");
+          w.className = "proto-princ";
+          var lab = document.createElement("label");
+          lab.textContent = p.label;
+          var inp = document.createElement("input");
+          inp.type = "text";
+          inp.value = (P.answers["pr"+k] || "");
+          inp.oninput = function(){ P.answers["pr"+k] = inp.value; save(); };
+          w.appendChild(lab); w.appendChild(inp);
+          body.appendChild(w);
+          inputs.push(inp);
+        });
+      }
+
+      /* ---- done button ---- */
+      var done = document.createElement("button");
+      done.className = "btn";
+      done.type = "button";
+      done.style.marginTop = "10px";
+      done.textContent = "סיימתי \u2014 לשלב הבא";
+      done.onclick = function(){
+        err.textContent = "";
+
+        if(s.min){
+          if(!P.deadlines[s.id]){ err.textContent = "הטיימר לא הופעל."; return; }
+          if(left(s.id) > 0){ err.textContent = "הזמן עוד לא נגמר."; return; }
+        }
+        if(s.input){
+          var v = (ta.value || "").trim();
+          if(v.length < s.chars){
+            err.textContent = "קצר מדי \u2014 " + v.length + " מתוך " + s.chars + " תווים.";
+            return;
+          }
+        }
+        if(s.princ){
+          var bad = 0;
+          PRINCIPLES.forEach(function(p, k){
+            var v = (inputs[k].value || "").trim();
+            var ok = v.length > 6 && p.tests.every(function(re){ return re.test(v); });
+            inputs[k].className = ok ? "good" : "bad";
+            if(!ok) bad++;
+          });
+          if(bad){
+            err.textContent = bad + " עקרונות לא תואמים למה ששמור. כתוב אותם שוב מהזיכרון.";
+            return;
+          }
+        }
+
+        P.idx++;
+        save(); render();
+      };
+      body.appendChild(done);
+      body.appendChild(err);
+      box.appendChild(el);
+    });
+
+    /* progress + gate */
+    var pct = Math.round((P.idx / S.length) * 100);
+    bar.style.width = pct + "%";
+    cyc.textContent = P.cycles;
+    lastEl.textContent = P.last || "\u2014";
+
+    if(complete()){
+      gate.className = "open";
+      gate.textContent = "\u2713 כל השלבים הושלמו. טופס הסיכום פתוח.";
+    } else {
+      gate.className = "";
+      gate.textContent = "הטופס נעול \u2014 נותרו " + (S.length - P.idx) + " שלבים.";
+    }
+  }
+
+  /* live clock */
+  setInterval(function(){
+    if(!box) return;
+    var S = steps(), s = S[P.idx];
+    if(!s || !s.min) return;
+    var c = box.querySelector(".proto-step:not(.done):not(.locked) .proto-clock");
+    if(!c) return;
+    var l = left(s.id);
+    if(l === null){ c.textContent = pad(s.min) + ":00"; return; }
+    c.textContent = pad(Math.floor(l/60)) + ":" + pad(l % 60);
+    c.className = "proto-clock" + (l === 0 ? " ready" : "");
+  }, 1000);
+
+  /* ---- gate the save button (capture phase = runs before the site handler) ---- */
+  document.addEventListener("click", function(e){
+    var t = e.target;
+    if(!t || t.id !== "addSummary") return;
+    if(complete()) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var m = document.getElementById("smMsg");
+    if(m) m.textContent = "הפרוטוקול לא הושלם \u2014 הסיכום לא נשמר.";
+    var w = document.getElementById("protoWrap");
+    if(w) w.scrollIntoView({ behavior:"smooth", block:"center" });
+  }, true);
+
+  /* ---- after a successful save the site clears smBody: start a new cycle ---- */
+  document.addEventListener("click", function(e){
+    var t = e.target;
+    if(!t || t.id !== "addSummary") return;
+    setTimeout(function(){
+      var b = document.getElementById("smBody");
+      if(b && b.value === "" && complete()){
+        P.cycles++;
+        P.last = new Date().toISOString().slice(0,10);
+        P.idx = 0; P.deadlines = {}; P.answers = {};
+        save(); render();
+      }
+    }, 60);
+  }, false);
+
+  /* ---- boot ---- */
+  function boot(){
+    wrap   = document.getElementById("protoWrap");
+    if(!wrap) return;
+    box    = document.getElementById("protoSteps");
+    bar    = document.getElementById("protoBar");
+    gate   = document.getElementById("protoGate");
+    cyc    = document.getElementById("protoCycles");
+    lastEl = document.getElementById("protoLast");
+
+    document.getElementById("protoReset").onclick = function(){
+      P.idx = 0; P.deadlines = {}; P.answers = {};
+      save(); render();
+    };
+    render();
+  }
+
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
+</script>
 </body></html>
