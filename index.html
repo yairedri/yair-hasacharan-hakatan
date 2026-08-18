@@ -1681,32 +1681,6 @@ https://docs.google.com/spreadsheets/d/1yRTn7A8J0uOn-nXH_uZJ3Hd5CUWWe-Wr__DZEGaI
       <div id="protoGate">הטופס נעול.</div>
     </div>
 
-    <div class="panel host-only block">
-      <h3>הסיכומים שלי — פרק אחר פרק</h3>
-      <p style="font-size:13.5px; color:var(--muted); margin-top:0;">כאן אני מסכם בעצמי, פרק-פרק, עם מסקנה ראשית ומשנית לכל פרק. בודק ה-AI נותן ציון, מוצא מסקנות שהוחמצו, שואל שאלות העמקה ומציע העשרה.</p>
-      <div class="form-row">
-        <div class="field"><label>הספר</label><select id="smBook"></select></div>
-        <div class="field"><label>הפרק</label><input id="smChapter" placeholder="מספר או שם הפרק"></div>
-      </div>
-      <div class="field" style="margin-bottom:10px;"><label>מסקנה ראשית של הפרק</label><input id="smMain" placeholder="המסקנה החשובה ביותר במשפט אחד"></div>
-      <div class="field" style="margin-bottom:10px;"><label>מסקנה משנית</label><input id="smSecondary" placeholder="מסקנה נוספת"></div>
-      <div class="field" style="margin-bottom:10px;">
-        <label>גוף הסיכום</label>
-        <textarea id="smBody" rows="7" placeholder="הסיכום שלך לפרק — רעיונות, דוגמאות, יישום..."></textarea>
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:6px;">
-          <label style="font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:5px; font-weight:400;">
-            <input type="checkbox" id="smAiAuto" checked style="width:auto;"> השלמה תחבירית אוטומטית כשעוצרים להקליד
-          </label>
-          <input type="password" id="smAiKey" placeholder="מפתח Anthropic API אישי (לא חובה)" style="max-width:230px; font-size:12px;">
-          <button type="button" class="btn small" id="smAiUndo" style="display:none;">ביטול ההשלמה האחרונה</button>
-          <span id="smAiStatus" style="font-size:12px; color:var(--muted);"></span>
-        </div>
-        <p style="font-size:11.5px; color:var(--muted); margin:4px 0 0;">כותבים במקוטע מהזיכרון — אחרי הפסקה קצרה בהקלדה, קלוד תופר בין החלקים בניסוח תחבירי, בלי להוסיף או לשנות אף רעיון. בלי מפתח אישי זה עובד רק כשהקובץ פתוח בתוך קלוד; עם מפתח (שנשמר בדפדפן שלכם בלבד) זה עובד גם באתר החי.</p>
-      </div>
-      <button class="btn" id="addSummary">שמירת הסיכום</button>
-      <span id="smMsg" style="font-size:13px; color:var(--red); margin-inline-start:10px;"></span>
-    </div>
-
     <div id="libDetail"></div>
     <div id="bookShelf"></div>
     <div class="panel host-only block">
@@ -3097,6 +3071,40 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
       <span id="lbMsg" style="font-size:13px;color:var(--green);margin-inline-start:8px;"></span>
     </div>
 
+    <div class="panel host-only block">
+      <h3>הסיכומים שלי — פרק אחר פרק</h3>
+      <p style="font-size:13.5px; color:var(--muted); margin-top:0;">כאן אני מסכם בעצמי, פרק-פרק. בודק ה-AI נותן ציון, מוצא מסקנות שהוחמצו, שואל שאלות העמקה ומציע העשרה.</p>
+      <div class="form-row">
+        <div class="field"><label>הספר</label><select id="smBook"></select></div>
+        <div class="field"><label>הפרק</label><input id="smChapter" placeholder="מספר או שם הפרק"></div>
+      </div>
+      <div class="field" style="margin-bottom:10px; background:var(--sky-soft, rgba(0,0,0,.03)); border-radius:10px; padding:10px 14px;">
+        <label style="margin-bottom:6px; display:block;">5 השאלות המנחות לכתיבת הסיכום</label>
+        <ol style="margin:0; padding-inline-start:20px; font-size:13px; color:var(--muted); line-height:1.7;">
+          <li>נסחו את הטענה המרכזית של הפרק במשפט אחד — במילים שלכם בלבד, בלי מונחים מהספר.</li>
+          <li>איזו אמונה שהחזקתם בה עד היום הפרק הזה סותר? מה האמונה הישנה, ומה החליף אותה.</li>
+          <li>איזה מספר, נתון או רעיון מהפרק הכי הפתיע אתכם — ולמה דווקא הוא?</li>
+          <li>פעולה אחת קונקרטית ליישום: מה בדיוק, מתי, ומה היא דורשת.</li>
+          <li>איך תדעו בעוד חודש אם זה באמת עבד? מה המדד המדויק.</li>
+        </ol>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>גוף הסיכום</label>
+        <textarea id="smBody" rows="7" placeholder="הסיכום שלך לפרק, לאור 5 השאלות למעלה — רעיונות, דוגמאות, יישום..."></textarea>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:6px;">
+          <label style="font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:5px; font-weight:400;">
+            <input type="checkbox" id="smAiAuto" checked style="width:auto;"> השלמה תחבירית אוטומטית כשעוצרים להקליד
+          </label>
+          <input type="password" id="smAiKey" placeholder="מפתח Anthropic API אישי (לא חובה)" style="max-width:230px; font-size:12px;">
+          <button type="button" class="btn small" id="smAiUndo" style="display:none;">ביטול ההשלמה האחרונה</button>
+          <span id="smAiStatus" style="font-size:12px; color:var(--muted);"></span>
+        </div>
+        <p style="font-size:11.5px; color:var(--muted); margin:4px 0 0;">כותבים במקוטע מהזיכרון — אחרי הפסקה קצרה בהקלדה, קלוד תופר בין החלקים בניסוח תחבירי, בלי להוסיף או לשנות אף רעיון. בלי מפתח אישי זה עובד רק כשהקובץ פתוח בתוך קלוד; עם מפתח (שנשמר בדפדפן שלכם בלבד) זה עובד גם באתר החי.</p>
+      </div>
+      <button class="btn" id="addSummary">שמירת הסיכום</button>
+      <span id="smMsg" style="font-size:13px; color:var(--red); margin-inline-start:10px;"></span>
+    </div>
+
     <div id="libLinksBox"></div>
 
     <div class="panel host-only block">
@@ -4282,15 +4290,13 @@ async function smAiComplete(){
 document.getElementById("addSummary").addEventListener("click",function(){
   const book=document.getElementById("smBook").value.trim();
   const chapter=document.getElementById("smChapter").value.trim();
-  const main=document.getElementById("smMain").value.trim();
-  const secondary=document.getElementById("smSecondary").value.trim();
   const body=document.getElementById("smBody").value.trim();
   const msg=document.getElementById("smMsg");
-  if(!book||!chapter||!main||!body){ msg.textContent="חסרים: ספר, פרק, מסקנה ראשית או גוף הסיכום."; return; }
+  if(!book||!chapter||!body){ msg.textContent="חסרים: ספר, פרק או גוף הסיכום."; return; }
   msg.textContent="";
   state.summaries.unshift({ id:Date.now(), date:new Date().toISOString().slice(0,10),
-    book:book, chapter:chapter, main:main, secondary:secondary, body:body, review:"" });
-  ["smBook","smChapter","smMain","smSecondary","smBody"].forEach(function(id){document.getElementById(id).value="";});
+    book:book, chapter:chapter, main:"", secondary:"", body:body, review:"" });
+  ["smBook","smChapter","smBody"].forEach(function(id){document.getElementById(id).value="";});
   renderSummaries(); persist();
 });
 
@@ -4331,9 +4337,9 @@ function renderSummaries(){
 async function reviewSummary(i, btn){
   const s=state.summaries[i];
   btn.disabled=true; const orig=btn.textContent; btn.textContent="בודק…";
-  const prompt = "אתה מנטור קפדני, ברמה אקדמית, לסוחר שמסכם ספרים כחלק מהכשרה אינטלקטואלית. הסוחר סיכם פרק. בדוק את הסיכום בקשיחות והוגנות.\n\n" +
+  const prompt = "אתה מנטור קפדני, ברמה אקדמית, לסוחר שמסכם ספרים כחלק מהכשרה אינטלקטואלית. הסוחר סיכם פרק לאור חמש שאלות מנחות (טענה מרכזית, אמונה שנסתרה, נתון מפתיע, פעולה קונקרטית, מדד הצלחה). בדוק את הסיכום בקשיחות והוגנות.\n\n" +
     "הספר: " + s.book + "\nהפרק: " + s.chapter + "\n" +
-    "המסקנה הראשית שניסח: " + s.main + "\n" +
+    (s.main ? "המסקנה הראשית שניסח: " + s.main + "\n" : "") +
     (s.secondary ? "המסקנה המשנית שניסח: " + s.secondary + "\n" : "") +
     "גוף הסיכום:\n" + s.body + "\n\n" +
     "החזר בעברית, בטקסט רגיל בלי כותרות Markdown, במבנה הבא:\n" +
