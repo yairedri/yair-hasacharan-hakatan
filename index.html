@@ -3053,6 +3053,34 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
     <h2 class="title">📕 ספריית מנהלים</h2>
     <p class="lead">מסלול קריאה יומי. פרק ביום, שלוש תזכורות, וחמש שאלות שאי אפשר לענות עליהן בלי באמת להבין את הפרק.</p>
 
+    <div id="lvViewer"></div>
+
+    <div class="panel host-only block">
+      <h3>🎓 שיעור לשילת</h3>
+      <p style="font-size:13px;color:var(--muted);margin-top:0;">שילת רואה את זה במלואו רק כשהשיעור פתוח. לפני כן היא רואה רק הודעה קצרה שיש שיעור מתוכנן — לא את התוכן.</p>
+      <div class="field" style="margin-bottom:10px;"><label>כותרת השיעור</label><input id="lvTitle" placeholder="למשל: תרגול תרחישים סטטיסטיים"></div>
+      <div class="field" style="margin-bottom:10px;"><label>היבטים שאציג (שורה לכל היבט)</label><textarea id="lvAspects" rows="4" placeholder="נושא ראשון&#10;נושא שני..."></textarea></div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>לוח ציור לדיאגרמות</label>
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px; flex-wrap:wrap;">
+          <input type="color" id="lvColor" value="#0A72C4" style="width:36px; height:30px; padding:2px; border:1px solid var(--line); border-radius:6px;">
+          <input type="range" id="lvWidth" min="1" max="12" value="3" style="width:110px;">
+          <button type="button" class="btn small ghost" id="lvClear">ניקוי לוח</button>
+        </div>
+        <canvas id="lvCanvas" width="760" height="320" style="border:1px solid var(--line); border-radius:10px; background:#fff; max-width:100%; touch-action:none; cursor:crosshair; display:block;"></canvas>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label>תמונות — לחצו כאן ואז הדביקו (Ctrl+V)</label>
+        <div id="lvPasteZone" tabindex="0" style="min-height:50px; border:1px dashed var(--line); border-radius:10px; padding:10px; font-size:13px; color:var(--muted); cursor:text;">לחיצה כאן ואז Ctrl+V להדבקת תמונה מהלוח</div>
+        <div id="lvImages" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+      </div>
+      <div class="admin-row" style="gap:10px; flex-wrap:wrap;">
+        <button class="btn" id="lvStart">🔴 פתיחת השיעור — שילת תראה עכשיו</button>
+        <button class="btn danger" id="lvEnd" style="display:none;">⏹ סיום השיעור</button>
+        <span id="lvStatus" style="font-size:13px; color:var(--muted);"></span>
+      </div>
+    </div>
+
     <div id="libNotifBar" class="panel"></div>
     <div id="libToday"></div>
 
@@ -3632,6 +3660,7 @@ let state = {
   moneyTopics: [], ictNotes: {}, wyckNotes: {}, advSources: [],
   tradePlan: {},
   adminNotes: {},
+  liveLesson: {active:false, title:"", aspects:"", canvas:"", images:[], startedAt:0},
   publishedAt: 0
 };
 
@@ -4361,6 +4390,8 @@ function applyHost(){
   const ro=!isHost();
   document.getElementById("weeklyReports").readOnly=ro;
   document.getElementById("learnNotes").readOnly=ro;
+  if(typeof renderLvViewer==="function") renderLvViewer();
+  if(typeof lvPollControl==="function") lvPollControl();
 }
 document.getElementById("hostLogin").addEventListener("click",function(){
   if(isHost()){ applyHost(); return; }
@@ -4396,7 +4427,7 @@ document.getElementById("publishBtn").addEventListener("click",function(){
    CLOUD SYNC (jsonbin.io) — host publishes, everyone reads
    ============================================================ */
 const CLOUD_LS="sachran_cloud_v1";
-const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","libLinks","bsTopics","habitsCustomised","homework","bookShelf","studies","submissions","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","publishedAt","cloudBin"];
+const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","libLinks","bsTopics","habitsCustomised","homework","bookShelf","studies","submissions","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","liveLesson","publishedAt","cloudBin"];
 function cloudCfg(){ try{ return JSON.parse(localStorage.getItem(CLOUD_LS))||{}; }catch(e){ return {}; } }
 function cloudSave(c){ try{ localStorage.setItem(CLOUD_LS,JSON.stringify(c)); }catch(e){} }
 function cloudPayload(){
@@ -4550,10 +4581,145 @@ function cloudPull(){
       persist();
       renderTexts(); renderAnalyses(); renderSummaries();
       renderLessons(); renderRecordings(); renderNotebooks(); renderPicks(); renderVideos(); renderAdminNotes(); renderHostJournal(); renderSiteLinks(); renderTradePlan();
+      if(typeof renderLvViewer==="function") renderLvViewer();
       if(typeof window.sachranRenderAll==="function") window.sachranRenderAll();
       if(typeof window.sachranCloudNote==="function") window.sachranCloudNote("עודכן מהענן ✓");
     }
   }).catch(function(){});
+}
+
+/* ============================================================
+   LIVE LESSON FOR SHILAT
+   ============================================================ */
+(function initLiveLesson(){
+  if(!state.liveLesson) state.liveLesson={active:false, title:"", aspects:"", canvas:"", images:[], startedAt:0};
+  const titleEl=document.getElementById("lvTitle"), aspEl=document.getElementById("lvAspects");
+  const canvas=document.getElementById("lvCanvas"), startBtn=document.getElementById("lvStart"), endBtn=document.getElementById("lvEnd");
+  const status=document.getElementById("lvStatus"), pasteZone=document.getElementById("lvPasteZone");
+  if(!canvas) return;
+
+  const ctx=canvas.getContext("2d");
+  ctx.fillStyle="#fff"; ctx.fillRect(0,0,canvas.width,canvas.height);
+  if(state.liveLesson.canvas){
+    const img=new Image();
+    img.onload=function(){ ctx.drawImage(img,0,0,canvas.width,canvas.height); };
+    img.src=state.liveLesson.canvas;
+  }
+  if(titleEl) titleEl.value=state.liveLesson.title||"";
+  if(aspEl) aspEl.value=state.liveLesson.aspects||"";
+
+  let drawing=false, lastX=0, lastY=0;
+  function pos(e){
+    const r=canvas.getBoundingClientRect();
+    const cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+    const cy=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+    return [cx*(canvas.width/r.width), cy*(canvas.height/r.height)];
+  }
+  function down(e){ drawing=true; [lastX,lastY]=pos(e); e.preventDefault(); }
+  function move(e){
+    if(!drawing) return;
+    const p=pos(e);
+    ctx.strokeStyle=document.getElementById("lvColor").value;
+    ctx.lineWidth=+document.getElementById("lvWidth").value;
+    ctx.lineCap="round"; ctx.lineJoin="round";
+    ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p[0],p[1]); ctx.stroke();
+    lastX=p[0]; lastY=p[1]; e.preventDefault();
+  }
+  let lvTimer=null;
+  function saveDraft(){
+    state.liveLesson.title=titleEl.value.trim();
+    state.liveLesson.aspects=aspEl.value;
+    state.liveLesson.canvas=canvas.toDataURL("image/png");
+    persist();
+  }
+  function scheduleSave(){ clearTimeout(lvTimer); lvTimer=setTimeout(saveDraft,500); }
+  function up(){ if(drawing){ drawing=false; scheduleSave(); } }
+  canvas.addEventListener("mousedown",down); canvas.addEventListener("mousemove",move); window.addEventListener("mouseup",up);
+  canvas.addEventListener("touchstart",down,{passive:false}); canvas.addEventListener("touchmove",move,{passive:false}); canvas.addEventListener("touchend",up);
+  document.getElementById("lvClear").addEventListener("click",function(){
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,canvas.width,canvas.height); scheduleSave();
+  });
+  [titleEl,aspEl].forEach(function(el){ if(el) el.addEventListener("input",scheduleSave); });
+
+  function renderLvImages(){
+    const box=document.getElementById("lvImages"); if(!box) return;
+    box.innerHTML="";
+    (state.liveLesson.images||[]).forEach(function(src,i){
+      const wrap=document.createElement("div"); wrap.style.position="relative";
+      const im=document.createElement("img"); im.src=src;
+      im.style.cssText="max-width:120px;max-height:120px;border:1px solid var(--line);border-radius:8px;display:block;";
+      const del=document.createElement("button"); del.type="button"; del.textContent="×";
+      del.style.cssText="position:absolute;top:-6px;left:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;line-height:1;";
+      del.onclick=function(){ state.liveLesson.images.splice(i,1); renderLvImages(); persist(); };
+      wrap.appendChild(im); wrap.appendChild(del); box.appendChild(wrap);
+    });
+  }
+  renderLvImages();
+  pasteZone.addEventListener("paste",function(e){
+    const items=(e.clipboardData||window.clipboardData).items;
+    for(let i=0;i<items.length;i++){
+      if(items[i].type.indexOf("image")===-1) continue;
+      const file=items[i].getAsFile();
+      const reader=new FileReader();
+      reader.onload=function(ev){
+        const img=new Image();
+        img.onload=function(){
+          const maxW=760, scale=Math.min(1,maxW/img.width);
+          const cv=document.createElement("canvas");
+          cv.width=Math.round(img.width*scale); cv.height=Math.round(img.height*scale);
+          cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+          state.liveLesson.images.push(cv.toDataURL("image/jpeg",0.75));
+          renderLvImages(); persist();
+        };
+        img.src=ev.target.result;
+      };
+      reader.readAsDataURL(file);
+      e.preventDefault();
+    }
+  });
+
+  function refreshBtns(){
+    startBtn.style.display=state.liveLesson.active?"none":"inline-block";
+    endBtn.style.display=state.liveLesson.active?"inline-block":"none";
+    status.textContent=state.liveLesson.active?"🔴 השיעור פתוח — שילת רואה את זה עכשיו":"";
+  }
+  startBtn.addEventListener("click",function(){
+    saveDraft();
+    if(!state.liveLesson.title){ status.textContent="תן כותרת לשיעור לפני הפתיחה."; return; }
+    state.liveLesson.active=true; state.liveLesson.startedAt=Date.now();
+    persist(); refreshBtns();
+  });
+  endBtn.addEventListener("click",function(){
+    state.liveLesson.active=false;
+    persist(); refreshBtns();
+  });
+  refreshBtns();
+})();
+
+function renderLvViewer(){
+  const box=document.getElementById("lvViewer");
+  if(!box) return;
+  if(isHost() || !canLib()){ box.innerHTML=""; return; }
+  const L=state.liveLesson||{};
+  if(L.active){
+    let html="<div class='panel' style='border-color:var(--amber);'><h3>🎓 "+escapeHtml(L.title||"שיעור חי")+"</h3>";
+    const asp=(L.aspects||"").split("\n").map(function(s){return s.trim();}).filter(Boolean);
+    if(asp.length) html+="<ul style='margin:8px 0 14px;padding-inline-start:20px;'>"+asp.map(function(a){return "<li>"+escapeHtml(a)+"</li>";}).join("")+"</ul>";
+    if(L.canvas) html+="<img src='"+L.canvas+"' style='max-width:100%;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;display:block;'>";
+    (L.images||[]).forEach(function(src){ html+="<img src='"+src+"' style='max-width:100%;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;display:block;'>"; });
+    html+="</div>";
+    box.innerHTML=html;
+  } else if(L.title){
+    box.innerHTML="<div class='panel' style='text-align:center;color:var(--muted);'>📅 מתוכנן שיעור: <b>"+escapeHtml(L.title)+"</b> — ייפתח בזמן השיעור.</div>";
+  } else {
+    box.innerHTML="";
+  }
+}
+let lvPollTimer=null;
+function lvPollControl(){
+  if(isShilat()){
+    if(!lvPollTimer) lvPollTimer=setInterval(cloudPull,25000);
+  } else if(lvPollTimer){ clearInterval(lvPollTimer); lvPollTimer=null; }
 }
 
 /* ============================================================
