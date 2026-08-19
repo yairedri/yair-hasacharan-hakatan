@@ -3069,6 +3069,7 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
       <div class="proto-bar"><i id="protoBar"></i></div>
       <div id="protoSteps"></div>
       <div id="protoGate">הטופס נעול.</div>
+      <div id="protoLog" style="margin-top:16px;"></div>
     </div>
 
     <div class="panel host-only block">
@@ -3669,6 +3670,7 @@ let state = {
   tradePlan: {},
   adminNotes: {},
   liveLesson: {active:false, title:"", aspects:"", canvas:"", images:[], startedAt:0},
+  protocolLog: [],
   publishedAt: 0
 };
 
@@ -4433,7 +4435,7 @@ document.getElementById("publishBtn").addEventListener("click",function(){
    CLOUD SYNC (jsonbin.io) — host publishes, everyone reads
    ============================================================ */
 const CLOUD_LS="sachran_cloud_v1";
-const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","libLinks","bsTopics","habitsCustomised","homework","bookShelf","studies","submissions","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","liveLesson","publishedAt","cloudBin"];
+const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","libLinks","bsTopics","habitsCustomised","homework","bookShelf","studies","submissions","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","liveLesson","protocolLog","publishedAt","cloudBin"];
 function cloudCfg(){ try{ return JSON.parse(localStorage.getItem(CLOUD_LS))||{}; }catch(e){ return {}; } }
 function cloudSave(c){ try{ localStorage.setItem(CLOUD_LS,JSON.stringify(c)); }catch(e){} }
 function cloudPayload(){
@@ -4588,6 +4590,7 @@ function cloudPull(){
       renderTexts(); renderAnalyses(); renderSummaries();
       renderLessons(); renderRecordings(); renderNotebooks(); renderPicks(); renderVideos(); renderAdminNotes(); renderHostJournal(); renderSiteLinks(); renderTradePlan();
       if(typeof renderLvViewer==="function") renderLvViewer();
+      if(typeof window.renderProtoLog==="function") window.renderProtoLog();
       if(typeof window.sachranRenderAll==="function") window.sachranRenderAll();
       if(typeof window.sachranCloudNote==="function") window.sachranCloudNote("עודכן מהענן ✓");
     }
@@ -6347,6 +6350,7 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
   document.getElementById("tDate").value=new Date().toISOString().slice(0,10);
   applyHost();
   route();
+  if(typeof window.renderProtoLog==="function") window.renderProtoLog();
 })();
 </script>
 
@@ -9572,6 +9576,43 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
     }
   }
 
+  /* ---- archive everything written this cycle before it gets wiped ---- */
+  function archiveCycle(){
+    var a = P.answers || {};
+    var hasContent = Object.keys(a).some(function(k){ return (a[k]||"").trim().length>0; });
+    if(!hasContent) return;
+    var entry = {
+      date: new Date().toISOString().slice(0,10),
+      recall: a.recall || "",
+      gap: a.gap || "",
+      intention: a.ii || "",
+      principles: [0,1,2,3,4].map(function(k){ return a["pr"+k] || ""; })
+    };
+    if(typeof state!=="undefined"){
+      if(!state.protocolLog) state.protocolLog = [];
+      state.protocolLog.unshift(entry);
+      if(typeof persist==="function") persist();
+    }
+  }
+  function renderProtoLog(){
+    var el = document.getElementById("protoLog");
+    if(!el) return;
+    if(typeof state==="undefined"){ setTimeout(renderProtoLog,200); return; }
+    var log = (typeof state!=="undefined" && state.protocolLog) || [];
+    if(!log.length){ el.innerHTML = ""; return; }
+    var esc = typeof escapeHtml==="function" ? escapeHtml : function(s){ var d=document.createElement("div"); d.textContent=s==null?"":s; return d.innerHTML; };
+    var html = "<h4 style='font-size:14px;margin:0 0 8px;'>📜 היסטוריית הפרוטוקול (" + log.length + ")</h4>";
+    log.slice(0,20).forEach(function(e){
+      html += "<div style='border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:13px;'>";
+      html += "<div style='color:var(--muted);margin-bottom:4px;'>" + esc(e.date) + "</div>";
+      if(e.intention) html += "<div><b>כוונת ביצוע (כאשר → אז):</b> " + esc(e.intention) + "</div>";
+      if(e.recall) html += "<div style='margin-top:4px;'><b>שליפה חופשית:</b> " + esc(e.recall.slice(0,220)) + (e.recall.length>220?"…":"") + "</div>";
+      if(e.gap) html += "<div style='margin-top:4px;'><b>פער מהמקור:</b> " + esc(e.gap) + "</div>";
+      html += "</div>";
+    });
+    el.innerHTML = html;
+  }
+
   /* live clock */
   setInterval(function(){
     if(!box) return;
@@ -9605,10 +9646,11 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
     setTimeout(function(){
       var b = document.getElementById("smBody");
       if(b && b.value === "" && complete()){
+        archiveCycle();
         P.cycles++;
         P.last = new Date().toISOString().slice(0,10);
         P.idx = 0; P.deadlines = {}; P.answers = {};
-        save(); render();
+        save(); render(); renderProtoLog();
       }
     }, 60);
   }, false);
@@ -9624,11 +9666,15 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
     lastEl = document.getElementById("protoLast");
 
     document.getElementById("protoReset").onclick = function(){
+      archiveCycle();
       P.idx = 0; P.deadlines = {}; P.answers = {};
-      save(); render();
+      save(); render(); renderProtoLog();
     };
     render();
+    renderProtoLog();
   }
+
+  window.renderProtoLog = renderProtoLog;
 
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
