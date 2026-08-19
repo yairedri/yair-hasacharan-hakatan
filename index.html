@@ -1666,21 +1666,6 @@ https://docs.google.com/spreadsheets/d/1yRTn7A8J0uOn-nXH_uZJ3Hd5CUWWe-Wr__DZEGaI
       #protoGate.open{border-color:var(--green);color:var(--green);}
     </style>
 
-    <div class="panel host-only block" id="protoWrap">
-      <h3>🔒 פרוטוקול הלמידה — לפני כל הגשה</h3>
-      <p style="font-size:13.5px;color:var(--muted);margin-top:0;">חמישה שלבים, כ-20 דקות. כל שלב נפתח רק אחרי שקודמו הושלם. שלבים עם טיימר לא ניתנים לדילוג. אי אפשר לשמור סיכום עד שהאחרון סומן.</p>
-      <div class="proto-mode">
-        <button type="button" id="protoReset">איפוס המחזור</button>
-      </div>
-      <div class="proto-meta">
-        <span>מחזורים שהושלמו: <b id="protoCycles">0</b></span>
-        <span>הושלם לאחרונה: <b id="protoLast">—</b></span>
-      </div>
-      <div class="proto-bar"><i id="protoBar"></i></div>
-      <div id="protoSteps"></div>
-      <div id="protoGate">הטופס נעול.</div>
-    </div>
-
     <div id="libDetail"></div>
     <div id="bookShelf"></div>
     <div class="panel host-only block">
@@ -3069,6 +3054,21 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
       <div class="field" style="margin:14px 0 10px;"><label>מטלה חופשית (לא מספר)</label><input id="lbTask" placeholder="למשל: לכתוב תקציב חודשי מלא"></div>
       <button class="btn ghost" id="lbAddTask">+ הוספת מטלה</button>
       <span id="lbMsg" style="font-size:13px;color:var(--green);margin-inline-start:8px;"></span>
+    </div>
+
+    <div class="panel host-only block" id="protoWrap" style="border:2px solid var(--sky, #7DC8F7); background:var(--sky-soft, rgba(0,0,0,.03));">
+      <h3 style="margin-top:0;">🔒 פרוטוקול הלמידה — לפני כל הגשה</h3>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:0;">חמישה שלבים, כ-20 דקות. כל שלב נפתח רק אחרי שקודמו הושלם. שלבים עם טיימר לא ניתנים לדילוג. אי אפשר לשמור סיכום עד שהאחרון סומן.</p>
+      <div class="proto-mode">
+        <button type="button" id="protoReset">איפוס המחזור</button>
+      </div>
+      <div class="proto-meta">
+        <span>מחזורים שהושלמו: <b id="protoCycles">0</b></span>
+        <span>הושלם לאחרונה: <b id="protoLast">—</b></span>
+      </div>
+      <div class="proto-bar"><i id="protoBar"></i></div>
+      <div id="protoSteps"></div>
+      <div id="protoGate">הטופס נעול.</div>
     </div>
 
     <div class="panel host-only block">
