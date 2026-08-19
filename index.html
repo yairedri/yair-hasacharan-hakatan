@@ -1666,6 +1666,56 @@ https://docs.google.com/spreadsheets/d/1yRTn7A8J0uOn-nXH_uZJ3Hd5CUWWe-Wr__DZEGaI
       #protoGate.open{border-color:var(--green);color:var(--green);}
     </style>
 
+    <div class="panel host-only block" id="protoWrap" style="border:2px solid var(--sky, #7DC8F7); background:var(--sky-soft, rgba(0,0,0,.03));">
+      <h3 style="margin-top:0;">🔒 פרוטוקול הלמידה — לפני כל הגשה</h3>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:0;">חמישה שלבים, כ-20 דקות. כל שלב נפתח רק אחרי שקודמו הושלם. שלבים עם טיימר לא ניתנים לדילוג. אי אפשר לשמור סיכום עד שהאחרון סומן.</p>
+      <div class="proto-mode">
+        <button type="button" id="protoReset">איפוס המחזור</button>
+      </div>
+      <div class="proto-meta">
+        <span>מחזורים שהושלמו: <b id="protoCycles">0</b></span>
+        <span>הושלם לאחרונה: <b id="protoLast">—</b></span>
+      </div>
+      <div class="proto-bar"><i id="protoBar"></i></div>
+      <div id="protoSteps"></div>
+      <div id="protoGate">הטופס נעול.</div>
+      <div id="protoLog" style="margin-top:16px;"></div>
+    </div>
+
+    <div class="panel host-only block">
+      <h3>הסיכומים שלי — פרק אחר פרק</h3>
+      <p style="font-size:13.5px; color:var(--muted); margin-top:0;">כאן אני מסכם בעצמי, פרק-פרק. בודק ה-AI נותן ציון, מוצא מסקנות שהוחמצו, שואל שאלות העמקה ומציע העשרה.</p>
+      <div class="form-row">
+        <div class="field"><label>הספר</label><select id="smBook"></select></div>
+        <div class="field"><label>הפרק</label><input id="smChapter" placeholder="מספר או שם הפרק"></div>
+      </div>
+      <div class="field" style="margin-bottom:10px; background:var(--sky-soft, rgba(0,0,0,.03)); border-radius:10px; padding:10px 14px;">
+        <label style="margin-bottom:6px; display:block;">5 השאלות המנחות לכתיבת הסיכום</label>
+        <ol style="margin:0; padding-inline-start:20px; font-size:13px; color:var(--muted); line-height:1.7;">
+          <li>נסחו את הטענה המרכזית של הפרק במשפט אחד — במילים שלכם בלבד, בלי מונחים מהספר.</li>
+          <li>איזו אמונה שהחזקתם בה עד היום הפרק הזה סותר? מה האמונה הישנה, ומה החליף אותה.</li>
+          <li>איזה מספר, נתון או רעיון מהפרק הכי הפתיע אתכם — ולמה דווקא הוא?</li>
+          <li>פעולה אחת קונקרטית ליישום: מה בדיוק, מתי, ומה היא דורשת.</li>
+          <li>איך תדעו בעוד חודש אם זה באמת עבד? מה המדד המדויק.</li>
+        </ol>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>גוף הסיכום</label>
+        <textarea id="smBody" rows="7" placeholder="הסיכום שלך לפרק, לאור 5 השאלות למעלה — רעיונות, דוגמאות, יישום..."></textarea>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:6px;">
+          <label style="font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:5px; font-weight:400;">
+            <input type="checkbox" id="smAiAuto" checked style="width:auto;"> השלמה תחבירית אוטומטית כשעוצרים להקליד
+          </label>
+          <input type="password" id="smAiKey" placeholder="מפתח Anthropic API אישי (לא חובה)" style="max-width:230px; font-size:12px;">
+          <button type="button" class="btn small" id="smAiUndo" style="display:none;">ביטול ההשלמה האחרונה</button>
+          <span id="smAiStatus" style="font-size:12px; color:var(--muted);"></span>
+        </div>
+        <p style="font-size:11.5px; color:var(--muted); margin:4px 0 0;">כותבים במקוטע מהזיכרון — אחרי הפסקה קצרה בהקלדה, קלוד תופר בין החלקים בניסוח תחבירי, בלי להוסיף או לשנות אף רעיון. בלי מפתח אישי זה עובד רק כשהקובץ פתוח בתוך קלוד; עם מפתח (שנשמר בדפדפן שלכם בלבד) זה עובד גם באתר החי.</p>
+      </div>
+      <button class="btn" id="addSummary">שמירת הסיכום</button>
+      <span id="smMsg" style="font-size:13px; color:var(--red); margin-inline-start:10px;"></span>
+    </div>
+
     <div id="libDetail"></div>
     <div id="bookShelf"></div>
     <div class="panel host-only block">
@@ -3054,56 +3104,6 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
       <div class="field" style="margin:14px 0 10px;"><label>מטלה חופשית (לא מספר)</label><input id="lbTask" placeholder="למשל: לכתוב תקציב חודשי מלא"></div>
       <button class="btn ghost" id="lbAddTask">+ הוספת מטלה</button>
       <span id="lbMsg" style="font-size:13px;color:var(--green);margin-inline-start:8px;"></span>
-    </div>
-
-    <div class="panel host-only block" id="protoWrap" style="border:2px solid var(--sky, #7DC8F7); background:var(--sky-soft, rgba(0,0,0,.03));">
-      <h3 style="margin-top:0;">🔒 פרוטוקול הלמידה — לפני כל הגשה</h3>
-      <p style="font-size:13.5px;color:var(--muted);margin-top:0;">חמישה שלבים, כ-20 דקות. כל שלב נפתח רק אחרי שקודמו הושלם. שלבים עם טיימר לא ניתנים לדילוג. אי אפשר לשמור סיכום עד שהאחרון סומן.</p>
-      <div class="proto-mode">
-        <button type="button" id="protoReset">איפוס המחזור</button>
-      </div>
-      <div class="proto-meta">
-        <span>מחזורים שהושלמו: <b id="protoCycles">0</b></span>
-        <span>הושלם לאחרונה: <b id="protoLast">—</b></span>
-      </div>
-      <div class="proto-bar"><i id="protoBar"></i></div>
-      <div id="protoSteps"></div>
-      <div id="protoGate">הטופס נעול.</div>
-      <div id="protoLog" style="margin-top:16px;"></div>
-    </div>
-
-    <div class="panel host-only block">
-      <h3>הסיכומים שלי — פרק אחר פרק</h3>
-      <p style="font-size:13.5px; color:var(--muted); margin-top:0;">כאן אני מסכם בעצמי, פרק-פרק. בודק ה-AI נותן ציון, מוצא מסקנות שהוחמצו, שואל שאלות העמקה ומציע העשרה.</p>
-      <div class="form-row">
-        <div class="field"><label>הספר</label><select id="smBook"></select></div>
-        <div class="field"><label>הפרק</label><input id="smChapter" placeholder="מספר או שם הפרק"></div>
-      </div>
-      <div class="field" style="margin-bottom:10px; background:var(--sky-soft, rgba(0,0,0,.03)); border-radius:10px; padding:10px 14px;">
-        <label style="margin-bottom:6px; display:block;">5 השאלות המנחות לכתיבת הסיכום</label>
-        <ol style="margin:0; padding-inline-start:20px; font-size:13px; color:var(--muted); line-height:1.7;">
-          <li>נסחו את הטענה המרכזית של הפרק במשפט אחד — במילים שלכם בלבד, בלי מונחים מהספר.</li>
-          <li>איזו אמונה שהחזקתם בה עד היום הפרק הזה סותר? מה האמונה הישנה, ומה החליף אותה.</li>
-          <li>איזה מספר, נתון או רעיון מהפרק הכי הפתיע אתכם — ולמה דווקא הוא?</li>
-          <li>פעולה אחת קונקרטית ליישום: מה בדיוק, מתי, ומה היא דורשת.</li>
-          <li>איך תדעו בעוד חודש אם זה באמת עבד? מה המדד המדויק.</li>
-        </ol>
-      </div>
-      <div class="field" style="margin-bottom:10px;">
-        <label>גוף הסיכום</label>
-        <textarea id="smBody" rows="7" placeholder="הסיכום שלך לפרק, לאור 5 השאלות למעלה — רעיונות, דוגמאות, יישום..."></textarea>
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:6px;">
-          <label style="font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:5px; font-weight:400;">
-            <input type="checkbox" id="smAiAuto" checked style="width:auto;"> השלמה תחבירית אוטומטית כשעוצרים להקליד
-          </label>
-          <input type="password" id="smAiKey" placeholder="מפתח Anthropic API אישי (לא חובה)" style="max-width:230px; font-size:12px;">
-          <button type="button" class="btn small" id="smAiUndo" style="display:none;">ביטול ההשלמה האחרונה</button>
-          <span id="smAiStatus" style="font-size:12px; color:var(--muted);"></span>
-        </div>
-        <p style="font-size:11.5px; color:var(--muted); margin:4px 0 0;">כותבים במקוטע מהזיכרון — אחרי הפסקה קצרה בהקלדה, קלוד תופר בין החלקים בניסוח תחבירי, בלי להוסיף או לשנות אף רעיון. בלי מפתח אישי זה עובד רק כשהקובץ פתוח בתוך קלוד; עם מפתח (שנשמר בדפדפן שלכם בלבד) זה עובד גם באתר החי.</p>
-      </div>
-      <button class="btn" id="addSummary">שמירת הסיכום</button>
-      <span id="smMsg" style="font-size:13px; color:var(--red); margin-inline-start:10px;"></span>
     </div>
 
     <div id="libLinksBox"></div>
