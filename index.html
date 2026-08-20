@@ -3170,6 +3170,45 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
     <div id="libRemote"></div>
     <div id="libSubmissions"></div>
 
+    <h3 class="sub-title lib-only block" style="margin-top:38px;font-size:21px;">💰 מאזן כספי — יאיר ושילת</h3>
+    <p class="lead lib-only block">הכנסות, הוצאות ומאזן לכל חודש בשנה — מחושב אוטומטית.</p>
+
+    <div class="panel host-only block">
+      <h3>➕ עדכון חודש</h3>
+      <div class="form-row">
+        <div class="field"><label>שנה</label><input type="number" id="finYear" min="2020" max="2100" placeholder="2026"></div>
+        <div class="field"><label>חודש</label>
+          <select id="finMonth">
+            <option value="1">ינואר</option><option value="2">פברואר</option><option value="3">מרץ</option>
+            <option value="4">אפריל</option><option value="5">מאי</option><option value="6">יוני</option>
+            <option value="7">יולי</option><option value="8">אוגוסט</option><option value="9">ספטמבר</option>
+            <option value="10">אוקטובר</option><option value="11">נובמבר</option><option value="12">דצמבר</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>הכנסות (₪)</label><input type="number" id="finIncome" min="0" placeholder="0"></div>
+        <div class="field"><label>הוצאות (₪)</label><input type="number" id="finExpenses" min="0" placeholder="0"></div>
+      </div>
+      <button class="btn" id="finSave">שמירת החודש</button>
+      <span id="finMsg" style="font-size:13px;color:var(--green);margin-inline-start:8px;"></span>
+    </div>
+
+    <div id="finTable" class="lib-only block"></div>
+
+    <div class="panel lib-only block" style="margin-top:14px;">
+      <h3>📚 קריאה מומלצת — חיסכון והשקעה</h3>
+      <p style="font-size:13px;color:var(--muted);margin-top:0;">הרצאות של כלכלנים ופרופסורים בעברית, על חיסכון, פנסיה והשקעות.</p>
+      <div id="finLinksList"></div>
+      <div class="host-only" style="margin-top:10px;">
+        <div class="form-row">
+          <div class="field" style="flex:2;"><label>כותרת</label><input id="finLinkTitle" placeholder="שם הכותב / הנושא"></div>
+          <div class="field"><label>קישור</label><input id="finLinkUrl" placeholder="https://"></div>
+        </div>
+        <button class="btn ghost small" id="finLinkAdd">+ הוספת קישור</button>
+      </div>
+    </div>
+
     <p class="back-line"><a class="btn ghost" href="#home">→ חזרה לדף הבית</a></p>
   </div>
 </section>
@@ -3671,6 +3710,11 @@ let state = {
   adminNotes: {},
   liveLesson: {active:false, title:"", aspects:"", canvas:"", images:[], startedAt:0},
   protocolLog: [],
+  financeLog: {},
+  financeLinks: [
+    { title: "פרופ' מומי דהן (האוניברסיטה העברית) — אורות וצללים במצב הפערים בישראל", url: "https://www.youtube.com/watch?v=GdXA87N5Zsw" },
+    { title: "פרופ' דן בן-דוד (אוניברסיטת ת\"א, מייסד מכון שורש) — הרצאה במסגרת ערב WIZE", url: "https://www.youtube.com/watch?v=Qt3WNRtz-J0" }
+  ],
   publishedAt: 0
 };
 
@@ -4435,7 +4479,7 @@ document.getElementById("publishBtn").addEventListener("click",function(){
    CLOUD SYNC (jsonbin.io) — host publishes, everyone reads
    ============================================================ */
 const CLOUD_LS="sachran_cloud_v1";
-const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","libLinks","bsTopics","habitsCustomised","homework","bookShelf","studies","submissions","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","liveLesson","protocolLog","publishedAt","cloudBin"];
+const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","libLinks","bsTopics","habitsCustomised","homework","bookShelf","studies","submissions","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","liveLesson","protocolLog","financeLog","financeLinks","publishedAt","cloudBin"];
 function cloudCfg(){ try{ return JSON.parse(localStorage.getItem(CLOUD_LS))||{}; }catch(e){ return {}; } }
 function cloudSave(c){ try{ localStorage.setItem(CLOUD_LS,JSON.stringify(c)); }catch(e){} }
 function cloudPayload(){
@@ -4591,6 +4635,8 @@ function cloudPull(){
       renderLessons(); renderRecordings(); renderNotebooks(); renderPicks(); renderVideos(); renderAdminNotes(); renderHostJournal(); renderSiteLinks(); renderTradePlan();
       if(typeof renderLvViewer==="function") renderLvViewer();
       if(typeof window.renderProtoLog==="function") window.renderProtoLog();
+      if(typeof renderFinance==="function") renderFinance();
+      if(typeof renderFinanceLinks==="function") renderFinanceLinks();
       if(typeof window.sachranRenderAll==="function") window.sachranRenderAll();
       if(typeof window.sachranCloudNote==="function") window.sachranCloudNote("עודכן מהענן ✓");
     }
@@ -4730,6 +4776,85 @@ function lvPollControl(){
     if(!lvPollTimer) lvPollTimer=setInterval(cloudPull,25000);
   } else if(lvPollTimer){ clearInterval(lvPollTimer); lvPollTimer=null; }
 }
+
+/* ============================================================
+   FINANCE BALANCE — monthly income/expenses for the year
+   ============================================================ */
+const FIN_MONTHS=["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+function renderFinance(){
+  const box=document.getElementById("finTable");
+  if(!box) return;
+  if(!state.financeLog) state.financeLog={};
+  const yearEl=document.getElementById("finYear");
+  const year=(yearEl && yearEl.value) ? yearEl.value : String(new Date().getFullYear());
+  let html="<div style='overflow-x:auto;'><table style='width:100%;border-collapse:collapse;font-size:13.5px;'>";
+  html+="<tr style='border-bottom:2px solid var(--line);'><th style='text-align:right;padding:8px;'>חודש</th><th style='text-align:right;padding:8px;'>הכנסות</th><th style='text-align:right;padding:8px;'>הוצאות</th><th style='text-align:right;padding:8px;'>מאזן</th></tr>";
+  let totIn=0, totOut=0;
+  for(let i=1;i<=12;i++){
+    const key=year+"-"+(i<10?"0"+i:i);
+    const e=state.financeLog[key]||{income:0,expenses:0};
+    const inc=e.income||0, exp=e.expenses||0, bal=inc-exp;
+    totIn+=inc; totOut+=exp;
+    html+="<tr style='border-bottom:1px solid var(--line);'><td style='padding:8px;'>"+FIN_MONTHS[i-1]+"</td>"+
+      "<td style='padding:8px;color:var(--green);'>"+inc.toLocaleString()+" ₪</td>"+
+      "<td style='padding:8px;color:var(--red);'>"+exp.toLocaleString()+" ₪</td>"+
+      "<td style='padding:8px;font-weight:700;color:"+(bal>=0?"var(--green)":"var(--red)")+";'>"+bal.toLocaleString()+" ₪</td></tr>";
+  }
+  const totBal=totIn-totOut;
+  html+="<tr style='border-top:2px solid var(--line);font-weight:800;'><td style='padding:8px;'>סה\"כ "+year+"</td>"+
+    "<td style='padding:8px;color:var(--green);'>"+totIn.toLocaleString()+" ₪</td>"+
+    "<td style='padding:8px;color:var(--red);'>"+totOut.toLocaleString()+" ₪</td>"+
+    "<td style='padding:8px;color:"+(totBal>=0?"var(--green)":"var(--red)")+";'>"+totBal.toLocaleString()+" ₪</td></tr>";
+  html+="</table></div>";
+  box.innerHTML=html;
+}
+function renderFinanceLinks(){
+  const box=document.getElementById("finLinksList");
+  if(!box) return;
+  const links=state.financeLinks||[];
+  if(!links.length){ box.innerHTML="<div style='color:var(--muted);font-size:13px;'>עוד אין קישורים.</div>"; return; }
+  let html="";
+  links.forEach(function(l,i){
+    html+="<div style='display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);'>"+
+      "<a href='"+escapeHtml(l.url)+"' target='_blank' rel='noopener' style='color:var(--text);font-weight:600;font-size:13.5px;'>"+escapeHtml(l.title)+" ↗</a>"+
+      "<button type='button' class='admin-link host-only' data-idx='"+i+"' style='color:var(--red);white-space:nowrap;'>הסרה</button>"+
+    "</div>";
+  });
+  box.innerHTML=html;
+  box.querySelectorAll("button[data-idx]").forEach(function(btn){
+    btn.onclick=function(){ state.financeLinks.splice(+btn.dataset.idx,1); persist(); renderFinanceLinks(); };
+  });
+}
+(function wireFinance(){
+  const saveBtn=document.getElementById("finSave");
+  if(!saveBtn) return;
+  const yearEl=document.getElementById("finYear");
+  if(yearEl && !yearEl.value) yearEl.value=String(new Date().getFullYear());
+  saveBtn.addEventListener("click",function(){
+    const year=(yearEl.value||"").trim()||String(new Date().getFullYear());
+    const month=document.getElementById("finMonth").value;
+    const income=parseFloat(document.getElementById("finIncome").value)||0;
+    const expenses=parseFloat(document.getElementById("finExpenses").value)||0;
+    if(!state.financeLog) state.financeLog={};
+    const key=year+"-"+(month.length<2?"0"+month:month);
+    state.financeLog[key]={income:income, expenses:expenses};
+    persist(); renderFinance();
+    const msg=document.getElementById("finMsg");
+    if(msg){ msg.textContent="נשמר ✓"; setTimeout(function(){ msg.textContent=""; },2000); }
+  });
+  if(yearEl) yearEl.addEventListener("change",renderFinance);
+  const linkBtn=document.getElementById("finLinkAdd");
+  if(linkBtn) linkBtn.addEventListener("click",function(){
+    const t=document.getElementById("finLinkTitle").value.trim();
+    const u=document.getElementById("finLinkUrl").value.trim();
+    if(!t||!u) return;
+    if(!state.financeLinks) state.financeLinks=[];
+    state.financeLinks.push({title:t,url:u});
+    document.getElementById("finLinkTitle").value=""; document.getElementById("finLinkUrl").value="";
+    persist(); renderFinanceLinks();
+  });
+  renderFinance(); renderFinanceLinks();
+})();
 
 /* ============================================================
    LESSONS PAGE
@@ -6351,6 +6476,8 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
   applyHost();
   route();
   if(typeof window.renderProtoLog==="function") window.renderProtoLog();
+  if(typeof renderFinance==="function") renderFinance();
+  if(typeof renderFinanceLinks==="function") renderFinanceLinks();
 })();
 </script>
 
