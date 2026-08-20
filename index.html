@@ -3210,6 +3210,28 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
       </div>
     </div>
 
+    <h3 class="sub-title lib-only block" style="margin-top:38px;font-size:21px;">🎯 מטרה משותפת — יאיר ושילת</h3>
+    <p class="lead lib-only block">מגדירים את המטרה יחד, וכל יום מוסיפים לה עוד קצת ריגוש. כל תוספת נשמרת — של שניכם.</p>
+
+    <div class="panel host-only block">
+      <h3>הגדרת המטרה (מנהל)</h3>
+      <div class="field" style="margin-bottom:10px;"><label>כותרת המטרה</label><input id="goalTitle" placeholder="למשל: חופש כלכלי עד גיל 40"></div>
+      <div class="field" style="margin-bottom:10px;"><label>תיאור — למה זו המטרה, איך זה ירגיש כשהיא תושג</label><textarea id="goalDesc" rows="4" placeholder="תארו את המטרה בפירוט — ככל שהיא חיה יותר בדמיון, כך היא מושכת יותר."></textarea></div>
+      <button class="btn" id="goalSave">שמירת המטרה</button>
+      <span id="goalMsg" style="font-size:13px;color:var(--green);margin-inline-start:8px;"></span>
+    </div>
+
+    <div id="goalView" class="lib-only block"></div>
+
+    <div class="panel lib-only block">
+      <h3>➕ תוספת ריגוש להיום</h3>
+      <textarea id="goalEntryText" rows="3" placeholder="מה קרה היום שמחבר אתכם עוד יותר למטרה — פרט קטן, תמונה מהדמיון, סיבה חדשה..."></textarea>
+      <button class="btn" id="goalEntryAdd" style="margin-top:8px;">הוספה</button>
+      <span id="goalEntryMsg" style="font-size:13px;color:var(--green);margin-inline-start:8px;"></span>
+    </div>
+
+    <div id="goalEntries" class="lib-only block"></div>
+
     <p class="back-line"><a class="btn ghost" href="#home">→ חזרה לדף הבית</a></p>
   </div>
 </section>
@@ -3759,6 +3781,8 @@ let state = {
     { title: "פרופ' דן בן-דוד (אוניברסיטת ת\"א, מייסד מכון שורש) — הרצאה במסגרת ערב WIZE", url: "https://www.youtube.com/watch?v=Qt3WNRtz-J0" }
   ],
   tradeImprovements: [],
+  sharedGoal: { title: "", description: "" },
+  goalEntries: [],
   publishedAt: 0
 };
 
@@ -4523,7 +4547,7 @@ document.getElementById("publishBtn").addEventListener("click",function(){
    CLOUD SYNC (jsonbin.io) — host publishes, everyone reads
    ============================================================ */
 const CLOUD_LS="sachran_cloud_v1";
-const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","libLinks","bsTopics","habitsCustomised","homework","bookShelf","studies","submissions","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","liveLesson","protocolLog","financeLog","financeLinks","publishedAt","cloudBin"];
+const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","libLinks","bsTopics","habitsCustomised","homework","bookShelf","studies","submissions","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","liveLesson","protocolLog","financeLog","financeLinks","sharedGoal","goalEntries","publishedAt","cloudBin"];
 function cloudCfg(){ try{ return JSON.parse(localStorage.getItem(CLOUD_LS))||{}; }catch(e){ return {}; } }
 function cloudSave(c){ try{ localStorage.setItem(CLOUD_LS,JSON.stringify(c)); }catch(e){} }
 function cloudPayload(){
@@ -4681,6 +4705,8 @@ function cloudPull(){
       if(typeof window.renderProtoLog==="function") window.renderProtoLog();
       if(typeof renderFinance==="function") renderFinance();
       if(typeof renderFinanceLinks==="function") renderFinanceLinks();
+      if(typeof renderGoalView==="function") renderGoalView();
+      if(typeof renderGoalEntries==="function") renderGoalEntries();
       if(typeof window.sachranRenderAll==="function") window.sachranRenderAll();
       if(typeof window.sachranCloudNote==="function") window.sachranCloudNote("עודכן מהענן ✓");
     }
@@ -4979,6 +5005,105 @@ function renderImproveList(){
     if(msg){ msg.textContent="נשמר ✓"; setTimeout(function(){ msg.textContent=""; },2000); }
   });
   renderImproveList(); renderImproveStats(); renderImproveMistakeList();
+})();
+
+/* ============================================================
+   SHARED GOAL — יאיר ושילת, both can add daily entries
+   host entries sync via the normal cloud state; shilat entries
+   go through the same shared inbox mechanism used for homework
+   ============================================================ */
+function goalInboxKey(){
+  return (state.texts && (state.texts.inboxKey || state.texts.hostKeyForInbox)) || "";
+}
+function renderGoalView(){
+  const box=document.getElementById("goalView");
+  if(!box) return;
+  const g=state.sharedGoal||{title:"",description:""};
+  if(!g.title){ box.innerHTML="<div class='panel' style='color:var(--muted);'>המטרה עוד לא הוגדרה.</div>"; return; }
+  box.innerHTML="<div class='panel' style='border-color:var(--sky, #7DC8F7);'><h3>🎯 "+escapeHtml(g.title)+"</h3>"+
+    (g.description ? "<p style='white-space:pre-line;'>"+escapeHtml(g.description)+"</p>" : "")+"</div>";
+}
+function goalEntryHtml(e){
+  return "<div class='an-item'><div class='an-date'>"+escapeHtml(e.date||"")+" · "+escapeHtml(e.who||"")+"</div>"+
+    "<div class='an-body'>"+escapeHtml(e.text||"")+"</div></div>";
+}
+function fetchGoalInboxEntries(cb){
+  if(typeof inboxUrl!=="function" || !inboxUrl()){ cb([]); return; }
+  const key=goalInboxKey();
+  if(!key){ cb([]); return; }
+  fetch(inboxUrl()+"/latest",{headers:{"X-Bin-Meta":"false","X-Master-Key":key,"X-Access-Key":key}})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      const items=(d && d.items)||[];
+      const goalItems=items.filter(function(it){ return it && it.goalEntry; })
+        .map(function(it){ return {date:it.date, who:it.name, text:it.text, at:it.at}; });
+      cb(goalItems);
+    }).catch(function(){ cb([]); });
+}
+function pushGoalToInbox(entry){
+  if(typeof inboxUrl!=="function" || !inboxUrl()) return Promise.resolve(false);
+  const key=goalInboxKey();
+  if(!key) return Promise.resolve(false);
+  const hdr={"Content-Type":"application/json","X-Master-Key":key,"X-Access-Key":key};
+  return fetch(inboxUrl()+"/latest",{headers:{"X-Bin-Meta":"false","X-Master-Key":key,"X-Access-Key":key}})
+    .then(function(r){ return r.ok ? r.json() : {items:[]}; })
+    .then(function(d){
+      const items=(d && d.items)||[];
+      items.unshift({goalEntry:true, name:entry.who, date:entry.date, text:entry.text, at:entry.at});
+      return fetch(inboxUrl(),{method:"PUT", headers:hdr, body:JSON.stringify({items:items})});
+    }).then(function(r){ return !!(r && r.ok); }).catch(function(){ return false; });
+}
+function renderGoalEntries(){
+  const box=document.getElementById("goalEntries");
+  if(!box) return;
+  const local=(state.goalEntries||[]).map(function(e){ return e; });
+  fetchGoalInboxEntries(function(remote){
+    const all=local.concat(remote);
+    all.sort(function(a,b){ return (b.at||0)-(a.at||0); });
+    if(!all.length){ box.innerHTML="<div style='color:var(--muted);font-size:13px;'>עוד אין תוספות.</div>"; return; }
+    box.innerHTML=all.map(goalEntryHtml).join("");
+  });
+}
+(function wireGoal(){
+  const saveBtn=document.getElementById("goalSave");
+  if(saveBtn){
+    const t=document.getElementById("goalTitle"), d=document.getElementById("goalDesc");
+    if(state.sharedGoal){ t.value=state.sharedGoal.title||""; d.value=state.sharedGoal.description||""; }
+    saveBtn.addEventListener("click",function(){
+      state.sharedGoal={ title: t.value.trim(), description: d.value.trim() };
+      persist(); renderGoalView();
+      const msg=document.getElementById("goalMsg");
+      if(msg){ msg.textContent="נשמר ✓"; setTimeout(function(){ msg.textContent=""; },2000); }
+    });
+  }
+  const addBtn=document.getElementById("goalEntryAdd");
+  if(addBtn){
+    addBtn.addEventListener("click",function(){
+      const ta=document.getElementById("goalEntryText");
+      const text=ta.value.trim();
+      if(!text) return;
+      const entry={ date: new Date().toISOString().slice(0,10), who: isHost()?"יאיר":"שילת", text: text, at: Date.now() };
+      const msg=document.getElementById("goalEntryMsg");
+      if(isHost()){
+        if(!state.goalEntries) state.goalEntries=[];
+        state.goalEntries.unshift(entry);
+        persist(); ta.value=""; renderGoalEntries();
+        if(msg){ msg.textContent="נשמר ✓"; setTimeout(function(){ msg.textContent=""; },2000); }
+      } else {
+        if(msg) msg.textContent="שולח…";
+        pushGoalToInbox(entry).then(function(ok){
+          if(ok){
+            ta.value=""; renderGoalEntries();
+            if(msg){ msg.textContent="נשמר ✓"; setTimeout(function(){ msg.textContent=""; },2000); }
+          } else if(msg){
+            msg.textContent="השליחה נכשלה — יאיר צריך להגדיר מפתח שליחה בספריית המנהלים.";
+          }
+        });
+      }
+    });
+  }
+  renderGoalView(); renderGoalEntries();
+  setInterval(function(){ if(canLib()) renderGoalEntries(); }, 20000);
 })();
 
 /* ============================================================
@@ -6603,6 +6728,8 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
   if(typeof window.renderProtoLog==="function") window.renderProtoLog();
   if(typeof renderFinance==="function") renderFinance();
   if(typeof renderFinanceLinks==="function") renderFinanceLinks();
+  if(typeof renderGoalView==="function") renderGoalView();
+  if(typeof renderGoalEntries==="function") renderGoalEntries();
 })();
 </script>
 
