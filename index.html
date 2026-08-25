@@ -1037,7 +1037,7 @@
     <a href="#learn">השקעות ולמידה</a>
     <a href="#library">ספרייה</a>
     <a href="#studies">חדר המחקר</a>
-    <a href="#focus">אימון ממוקד</a>
+    <a href="#focus" class="host-only">אימון ממוקד</a>
     <a href="#ict">ICT</a>
     <a href="#wyckoff">וייקוף</a>
     <a href="#advanced">מסחר מורכב</a>
@@ -1163,9 +1163,9 @@
         <p>מסות עומק על הספרים שסוחר אינטליגנטי חייב להכיר: טאלב, כהנמן, מלכיאל, תורת המשחקים ועוד — עם יישום אמיתי לשווקים.</p>
         <span class="go">לכניסה ←</span>
       </a>
-      <a class="card" href="#focus">
+      <a class="card host-only block" href="#focus">
         <h3><span class="c-emo">🎯</span> אימון ממוקד</h3>
-        <p>שלושה אימונים לשבוע שאתם מגדירים בעצמכם. כל יום החלק היומי שלהם — והאתר נפתח רק אחרי שביצעתם.</p>
+        <p>ההרגלים והאימון הממוקד שלי — צ'ק-ליסט יומי, נקודה על כל וי.</p>
         <span class="go">לכניסה ←</span>
       </a>
       <a class="card" href="#ict">
@@ -3041,9 +3041,29 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
 <section class="block" style="border-bottom:none;">
   <div class="container">
     <div id="anote-focus" class="admin-note" style="display:none;"></div>
+    <div class="kicker">רק אתה רואה את זה</div>
+    <h2 class="title">🎯 אימון ממוקד — ההרגלים שלי</h2>
+
+    <div style="background:#000; color:#fff; border-radius:16px; padding:24px; margin-bottom:32px;">
+      <h3 style="margin-top:0; color:#fff;">✅ צ'ק-ליסט יומי</h3>
+      <p style="color:#ccc; font-size:13.5px; margin-top:0;">כל וי שווה נקודה אחת. ב-100 נקודות מגיע לך פרס.</p>
+      <div id="habitList"></div>
+      <div id="habitStats" style="display:flex; gap:16px; margin:14px 0; flex-wrap:wrap;"></div>
+      <div id="habitPoints"></div>
+      <div class="host-only" style="margin-top:20px; padding-top:16px; border-top:1px solid #333;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+          <input id="hbIcon" placeholder="אימוג'י" style="width:70px; background:#111; color:#fff; border:1px solid #333; border-radius:8px; padding:8px;">
+          <input id="hbName" placeholder="שם ההרגל" style="flex:1; min-width:160px; background:#111; color:#fff; border:1px solid #333; border-radius:8px; padding:8px;">
+          <label style="display:flex; align-items:center; gap:4px; color:#ccc; font-size:13px;"><input type="checkbox" id="hbMust" style="width:auto;"> חובה</label>
+        </div>
+        <button class="btn small" id="hbAdd">+ הוספת הרגל</button>
+        <button class="admin-link" id="hbReset" style="color:#ccc; margin-inline-start:10px;">איפוס לרשימה המקורית</button>
+      </div>
+    </div>
+
     <div class="kicker">שלושה אימונים. שבעה ימים.</div>
-    <h2 class="title">🎯 אימון ממוקד</h2>
-    <p class="lead">בכל יום ראשון אתם קובעים שלושה אימונים לשבוע ויעד שבועי לכל אחד. היעד היומי הוא היעד השבועי חלקי שבעה. עד שלא ביצעתם את החלק של היום — שאר האתר נעול.</p>
+    <h2 class="title" style="font-size:22px;">המערכת הישנה — שלושה אימונים שבועיים</h2>
+    <p class="lead">בכל יום ראשון אתם קובעים שלושה אימונים לשבוע ויעד שבועי לכל אחד. היעד היומי הוא היעד השבועי חלקי שבעה. עד שלא ביצעתם את החלק של היום — שאר האתר נעול (עבורך בלבד כעת).</p>
 
     <div id="focusSetup"></div>
     <div id="focusToday"></div>
@@ -7070,11 +7090,16 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
   ];
 
   var DEF_HABITS = [
+    { id: "wake7",    i: "⏰", n: "קימה ב-7",     must: false },
     { id: "tefillin", i: "🙏", n: "הנחת תפילין", must: false },
     { id: "stretch",  i: "🧘", n: "מתיחות",       must: false },
-    { id: "beliefs",  i: "📜", n: "קריאת אמונות ליבה", must: false },
+    { id: "shower",   i: "🚿", n: "מקלחת",        must: false },
     { id: "book",     i: "📖", n: "קריאת ספר",    must: false },
-    { id: "tesla",    i: "⚡", n: "חוק 3-6-9 של טסלה", must: false }
+    { id: "newthing", i: "💡", n: "ללמוד משהו חדש", must: false },
+    { id: "memory",   i: "🧠", n: "שיפור הזיכרון שלי", must: false },
+    { id: "ict",      i: "📘", n: "ביצוע ניתוחים ב-ICT", must: false },
+    { id: "advanced", i: "🧮", n: "ללמוד על מסחר מורכב", must: false },
+    { id: "newict",   i: "🎯", n: "משהו חדש", must: false }
   ];
 
   var QUESTIONS = [
@@ -7498,8 +7523,8 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
     if (typeof state !== "object" || !state) return false;
     if (!state.routine || !state.routine.length) state.routine = DEF_ROUTINE.slice();
     if (!state.habits || !state.habits.length) state.habits = DEF_HABITS.slice();
-    /* אם נשמרו הרגלים אוטומטיים מגרסאות קודמות — חוזרים לחמישה של יאיר */
-    if (state.habits.length > 5 && !state.habitsCustomised) state.habits = DEF_HABITS.slice();
+    /* אם נשמרו הרגלים אוטומטיים מגרסאות קודמות — מתעדכן לרשימה הנוכחית של יאיר */
+    if (state.habits.length !== DEF_HABITS.length && !state.habitsCustomised) state.habits = DEF_HABITS.slice();
     if (!state.goal) state.goal = null;
     if (!state.books || !state.books.length) state.books = JSON.parse(JSON.stringify(DEF_BOOKS));
     if (!state.libTasks) state.libTasks = [];
@@ -7643,6 +7668,37 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
     el("habitStats").innerHTML =
       '<div class="stat-box"><div class="num amb">' + n + "/" + tot + '</div><div class="lbl">היום</div></div>' +
       '<div class="stat-box"><div class="num">' + best + '</div><div class="lbl">הרצף הארוך ביותר</div></div>';
+    renderHabitPoints();
+  }
+  function habitPoints() {
+    var mine = me(); var total = 0;
+    Object.keys(mine).forEach(function (k) {
+      if (k.indexOf("hb_") === 0) {
+        var day = mine[k];
+        Object.keys(day).forEach(function (id) { if (day[id]) total++; });
+      }
+    });
+    return total;
+  }
+  function habitRedeemed() {
+    try { return parseInt(localStorage.getItem("hb_redeemed") || "0", 10) || 0; } catch (e) { return 0; }
+  }
+  function renderHabitPoints() {
+    var box = el("habitPoints"); if (!box) return;
+    var total = habitPoints();
+    var current = total - habitRedeemed();
+    var pct = Math.max(0, Math.min(100, current));
+    box.innerHTML =
+      "<div style='font-size:15px;color:#fff;margin-bottom:6px;'>נקודות: <b>" + current + "</b> / 100</div>" +
+      "<div style='height:10px;border-radius:99px;background:#333;overflow:hidden;'><div style='height:100%;width:" + pct + "%;background:#fff;'></div></div>" +
+      (current >= 100 ? "<div style='margin-top:8px;color:#4dff88;font-weight:700;'>🎉 הגעת ל-100! מגיע לך פרס.</div>" : "") +
+      "<button type='button' class='btn small host-only' id='habitRedeemBtn' style='margin-top:12px;'>פדיתי פרס — איפוס המונה</button>";
+    var btn = el("habitRedeemBtn");
+    if (btn) btn.onclick = function () {
+      if (!confirm("לאפס את מונה הנקודות ל-0? (הרצפים וההיסטוריה לא נפגעים)")) return;
+      try { localStorage.setItem("hb_redeemed", String(total)); } catch (e) {}
+      renderHabitPoints();
+    };
   }
 
   /* ============================ כסף ============================ */
@@ -8697,6 +8753,7 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
   /* ---------- הנעילה ---------- */
   function applyLock() {
     var gate = document.getElementById("focusGate");
+    if (!document.body.classList.contains("host")) { if (gate) gate.classList.remove("on"); return; }
     var open = focusMet() || document.body.classList.contains("host") ||
                (location.hash || "") === "#focus" || (location.hash || "") === "";
     var f = focusData();
@@ -9676,6 +9733,13 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
       if (isHost()) return;
       var pgI = document.querySelector('[data-page="improve"]');
       if (pgI) pgI.style.display = "none";
+      location.replace("#home");
+      return;
+    }
+    if ((location.hash || "") === "#focus") {
+      if (isHost()) return;
+      var pgF = document.querySelector('[data-page="focus"]');
+      if (pgF) pgF.style.display = "none";
       location.replace("#home");
       return;
     }
