@@ -6713,26 +6713,20 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
   if(base){
     state.texts=Object.assign({},DEFAULT_TEXTS,base.texts||{});
     state.trades=base.trades||[];
-    state.analyses=base.analyses||[];
-    state.research=base.research||[];
-    state.summaries=base.summaries||[];
-    state.lessons=base.lessons||[];
-    state.recordings=base.recordings||[];
-    state.notebooks=base.notebooks||[];
-    state.picks=base.picks||[];
-    state.videos=base.videos||[];
-    state.weeklyReports=base.weeklyReports||"";
-    state.learnNotes=base.learnNotes||"";
     state.proc=base.proc||[];
     state.calib=base.calib||[];
     state.blindLog=base.blindLog||[];
     state.cloudBin="6a5aa0beda38895dfe6ce352"; /* fixed cloud address */
-    state.inboxBin=base.inboxBin||"";
-    state.adminNotes=base.adminNotes||{};
-    state.hostJournal=base.hostJournal||[];
-    state.siteLinks=base.siteLinks||[];
-    state.tradePlan=base.tradePlan||{};
-    state.publishedAt=base.publishedAt||0;
+    /* restore every other synced field from the visitor's saved copy —
+       previously only a hand-picked subset was restored here, so anything
+       added later (studies, habits, routine, goal, books, submissions,
+       homework, bookShelf, liveLesson, protocolLog, financeLog, sharedGoal,
+       goalEntries, etc.) silently reset to defaults on every reload unless
+       a lucky cloudPull() timing happened to rescue it */
+    CONTENT_KEYS.forEach(function(k){
+      if(k==="texts"||k==="cloudBin") return;
+      if(base[k]!==undefined) state[k]=base[k];
+    });
   }
   renderTexts(); renderTrades(); renderStats(); renderAnalyses(); renderSummaries(); renderLessons(); renderRecordings(); renderNotebooks(); renderPicks(); renderVideos(); renderProc(); renderCalib(); renderHostJournal(); renderSiteLinks(); renderTradePlan();
   document.getElementById("pcDate").value=new Date().toISOString().slice(0,10);
