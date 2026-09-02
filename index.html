@@ -1024,6 +1024,63 @@
 </head>
 <body class="host">
 
+<div id="siteGate" style="position:fixed; inset:0; z-index:99999; background:rgba(10,42,68,.92); display:flex; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; border-radius:16px; padding:32px; max-width:360px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.35); font-family:Heebo,Arial,sans-serif;">
+    <div style="font-size:40px; margin-bottom:10px;">🔒</div>
+    <h2 style="margin:0 0 6px; font-size:20px; color:#0D2A44;">האתר סגור</h2>
+    <p style="color:#54718C; font-size:14px; margin:0 0 18px;">הזינו סיסמה כדי להיכנס.</p>
+    <input type="password" id="siteGatePass" placeholder="סיסמה" style="width:100%; box-sizing:border-box; padding:12px; border:1px solid #D8E8F7; border-radius:10px; font-size:15px; text-align:center; margin-bottom:10px;">
+    <button type="button" id="siteGateBtn" style="width:100%; padding:12px; border:none; border-radius:10px; background:#0A72C4; color:#fff; font-size:15px; font-weight:700; cursor:pointer;">כניסה</button>
+    <div id="siteGateErr" style="color:#C8322F; font-size:13px; margin-top:10px; min-height:16px;"></div>
+    <button type="button" id="siteGateAdmin" style="background:none; border:none; color:#54718C; font-size:12.5px; margin-top:14px; cursor:pointer; text-decoration:underline;">כניסת מנהל</button>
+  </div>
+</div>
+<script>
+(function(){
+  var SITE_PASS_FALLBACK = "SACHRAN123";
+  var HOST_PASS_FALLBACK = "yairedri1";
+  function savedTexts(){
+    try{
+      var raw = localStorage.getItem("hasachran-site-v4");
+      if(raw){ var s = JSON.parse(raw); if(s && s.texts) return s.texts; }
+    }catch(e){}
+    return null;
+  }
+  function sitePassNow(){ var t=savedTexts(); return (t && t.sitePass) || SITE_PASS_FALLBACK; }
+  function hostPassNow(){ var t=savedTexts(); return (t && t.hostPass) || HOST_PASS_FALLBACK; }
+  function isHostNow(){ try{ return sessionStorage.getItem("hs-host")==="1"; }catch(e){ return false; } }
+  function alreadyOk(){ try{ return sessionStorage.getItem("hs-site-ok")==="1"; }catch(e){ return false; } }
+  var gate=document.getElementById("siteGate");
+  if(!gate) return;
+  function unlock(){ gate.style.display="none"; try{ sessionStorage.setItem("hs-site-ok","1"); }catch(e){} }
+  function unlockAsHost(){
+    try{ sessionStorage.setItem("hs-host","1"); sessionStorage.setItem("hs-role","host"); }catch(e){}
+    unlock();
+    if(typeof window.applyHost==="function") window.applyHost();
+    if(typeof window.route==="function") window.route();
+  }
+  if(isHostNow() || alreadyOk()){
+    unlock();
+  } else {
+    var btn=document.getElementById("siteGateBtn"), inp=document.getElementById("siteGatePass"), err=document.getElementById("siteGateErr");
+    var adminBtn=document.getElementById("siteGateAdmin");
+    function tryUnlock(){
+      if(inp.value===sitePassNow()){ unlock(); }
+      else { err.textContent="סיסמה שגויה."; inp.value=""; inp.focus(); }
+    }
+    btn.addEventListener("click",tryUnlock);
+    inp.addEventListener("keydown",function(e){ if(e.key==="Enter") tryUnlock(); });
+    if(adminBtn) adminBtn.addEventListener("click",function(){
+      var p=window.prompt("סיסמת מנהל:");
+      if(p===null) return;
+      if(p===hostPassNow()) unlockAsHost();
+      else { err.textContent="סיסמת מנהל שגויה."; }
+    });
+    setTimeout(function(){ inp.focus(); },100);
+  }
+})();
+</script>
+
 <div class="shilat-banner">מצב שילת — הספרייה שלנו. שאר האתר פתוח לקריאה בלבד.
   <button id="shilatOut" type="button">יציאה</button></div>
 
@@ -3693,6 +3750,7 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
       <button class="admin-link" id="hostLogin">כניסת מנהל</button>
       <span class="host-badge host-only">מצב מנהל פעיל</span>
       <button class="admin-link host-only" data-edit="hostPass">שינוי סיסמה</button>
+      <button class="admin-link host-only" data-edit="sitePass">שינוי סיסמת האתר</button>
       <button class="btn small host-only" id="publishBtn">הורדת גרסה לפרסום (index.html)</button>
       <button class="admin-link host-only" id="hostLogout">יציאה ממצב מנהל</button>
     </div>
@@ -3767,7 +3825,7 @@ const DEFAULT_TEXTS = {
   footerLine: "הסחרן הקטן · סוחר ריטייל קטן, עם כוונות נכונות ופחות אשליות",
   disclaimer: "שום דבר באתר הזה אינו ייעוץ או המלצת השקעה. מסחר כרוך בסיכון ממשי לאובדן כספך.",
   learnFileUrl: "https://excel.cloud.microsoft/open/onedrive/?docId=E69E2E09023B1934%21s20ecea88aba04c2d8e3a69bea6f2cf16&driveId=E69E2E09023B1934",
-  hostPass: "yairedri1", shilatPass: "20032006"
+  hostPass: "yairedri1", shilatPass: "20032006", sitePass: "SACHRAN123"
 };
 
 const FIELD_META = {
@@ -3781,7 +3839,8 @@ const FIELD_META = {
   findTitle:["כותרת",""], contactTitle:["כותרת הקשר",""], contactBody:["טקסט הקשר",""],
   email:["כתובת האימייל",""], footerLine:["שורת התחתית",""],
   learnFileUrl:["קישור קובץ הלימוד","הדבק קישור מלא הכולל https://"],
-  hostPass:["סיסמת מנהל","שנה מיד את ברירת המחדל. הסיסמה שמורה בקובץ עצמו — זו הגנת תצוגה, לא כספת."]
+  hostPass:["סיסמת מנהל","שנה מיד את ברירת המחדל. הסיסמה שמורה בקובץ עצמו — זו הגנת תצוגה, לא כספת."],
+  sitePass:["סיסמת האתר","הסיסמה שגולשים צריכים כדי להיכנס לאתר בכלל. מנהל מחובר תמיד עוקף אותה."]
 };
 
 let state = {
