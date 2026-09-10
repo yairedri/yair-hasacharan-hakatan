@@ -3396,24 +3396,15 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
   <div class="container">
     <div id="anote-ict" class="admin-note" style="display:none;"></div>
     <div class="kicker">Inner Circle Trader</div>
-    <h2 class="title">📘 ICT — כל המושגים במקום אחד</h2>
-    <p class="lead">כל תווית שהשיטה משתמשת בה, מסודרת לפי קטגוריה. פותחים מושג, קוראים את ההסבר שלי, ורואים דוגמה מסומנת מהגרף.</p>
+    <h2 class="title">📘 ICT — החומרים שלי</h2>
+    <p class="lead">המסמכים, התמונות והקישורים שאני באמת עובד איתם. הכל נפתח כאן בתוך הדף — בלי הורדות.</p>
     <div class="panel">
       <h3>🖊️ איך מסמנים את זה בטריידינגוויו</h3>
       <div class="lead" style="margin:0;">הכלים שאני משתמש בהם לסימון: <b>Rectangle</b> לאזורים (OB, FVG), <b>Horizontal Ray</b> לרמות נזילות, <b>Trend Line</b> למבנה, <b>Fib Retracement</b> עם רמות 0.62 / 0.705 / 0.79 ל-OTE, ו-<b>Long/Short Position</b> ליחס סיכון־סיכוי. שמרו את ההגדרות כ-Template כדי לא להגדיר מחדש בכל פעם.</div>
     </div>
     <div id="ictNarrative"></div>
-    <div id="ictList"></div>
-    <div class="panel host-only block">
-      <h3>הוספת מושג משלך</h3>
-      <div class="form-row">
-        <div class="field"><label>קוד</label><input id="icKey" placeholder="OB2"></div>
-        <div class="field" style="flex:2;"><label>שם בעברית</label><input id="icHe"></div>
-      </div>
-      <div class="field" style="margin-bottom:10px;"><label>שם באנגלית</label><input id="icEn"></div>
-      <div class="field" style="margin-bottom:10px;"><label>לאיזו קטגוריה</label><input id="icGrp" placeholder="נזילות"></div>
-      <button class="btn" id="icAdd">הוספה</button>
-    </div>
+    <div id="ictMaterials"></div>
+    <div class="panel host-only block" id="ictMatAdd"></div>
     <p class="back-line"><a class="btn ghost" href="#home">→ חזרה לדף הבית</a></p>
   </div>
 </section>
@@ -3425,23 +3416,14 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
   <div class="container">
     <div id="anote-wyckoff" class="admin-note" style="display:none;"></div>
     <div class="kicker">Richard Wyckoff</div>
-    <h2 class="title">📐 וייקוף — השיטה, השלבים והתוויות</h2>
-    <p class="lead">שיטה בת מאה שנה שעדיין עובדת, כי היא לא מנסה לנחש — היא קוראת מי קונה ומי מוכר. כל תווית מוסברת לפי השלב שבו היא מופיעה.</p>
+    <h2 class="title">📐 וייקוף — החומרים שלי</h2>
+    <p class="lead">שיטה בת מאה שנה שעדיין עובדת, כי היא לא מנסה לנחש — היא קוראת מי קונה ומי מוכר. כאן המסמכים, התמונות והקישורים שאני עובד איתם, נפתחים בתוך הדף.</p>
     <div class="panel">
       <h3>🖊️ איך מסמנים את זה בטריידינגוויו</h3>
       <div class="lead" style="margin:0;">הכלים: <b>Rectangle</b> לתחום המסחר (Trading Range), <b>Horizontal Ray</b> ל-Creek ול-Ice, <b>Text</b> לתוויות עצמן (SC, AR, ST, Spring...), <b>Vertical Line</b> להפרדה בין שלבים, ו-<b>Volume</b> למטה תמיד פתוח — בלי ווליום אין וייקוף.</div>
     </div>
-    <div id="wyckList"></div>
-    <div class="panel host-only block">
-      <h3>הוספת תווית משלך</h3>
-      <div class="form-row">
-        <div class="field"><label>קוד</label><input id="wkKey" placeholder="ST2"></div>
-        <div class="field" style="flex:2;"><label>שם בעברית</label><input id="wkHe"></div>
-      </div>
-      <div class="field" style="margin-bottom:10px;"><label>שם באנגלית</label><input id="wkEn"></div>
-      <div class="field" style="margin-bottom:10px;"><label>לאיזו קטגוריה</label><input id="wkGrp" placeholder="צבירה"></div>
-      <button class="btn" id="wkAdd">הוספה</button>
-    </div>
+    <div id="wyckMaterials"></div>
+    <div class="panel host-only block" id="wyckMatAdd"></div>
     <p class="back-line"><a class="btn ghost" href="#home">→ חזרה לדף הבית</a></p>
   </div>
 </section>
@@ -3877,6 +3859,8 @@ let state = {
   sharedGoal: { title: "", description: "" },
   goalEntries: [],
   implementationLog: [],
+  ictMaterials: [],
+  wyckMaterials: [],
   publishedAt: 0
 };
 
@@ -4641,7 +4625,7 @@ document.getElementById("publishBtn").addEventListener("click",function(){
    CLOUD SYNC (jsonbin.io) — host publishes, everyone reads
    ============================================================ */
 const CLOUD_LS="sachran_cloud_v1";
-const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","libLinks","bsTopics","habitsCustomised","homework","bookShelf","studies","submissions","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","liveLesson","protocolLog","financeLog","financeLinks","sharedGoal","goalEntries","implementationLog","publishedAt","cloudBin"];
+const CONTENT_KEYS=["inboxBin","adminNotes","hostJournal","siteLinks","tradePlan","routine","habits","goal","books","libTasks","moneyTopics","ictNotes","wyckNotes","advSources","ictCustom","wyckCustom","libLinks","bsTopics","habitsCustomised","homework","bookShelf","studies","submissions","texts","analyses","summaries","lessons","recordings","notebooks","picks","videos","weeklyReports","learnNotes","liveLesson","protocolLog","financeLog","financeLinks","sharedGoal","goalEntries","implementationLog","ictMaterials","wyckMaterials","publishedAt","cloudBin"];
 function cloudCfg(){ try{ return JSON.parse(localStorage.getItem(CLOUD_LS))||{}; }catch(e){ return {}; } }
 function cloudSave(c){ try{ localStorage.setItem(CLOUD_LS,JSON.stringify(c)); }catch(e){} }
 function cloudPayload(){
@@ -4674,6 +4658,14 @@ function cloudPayload(){
       if(bytes()>95000 && p.adminNotes[k] && p.adminNotes[k].img){ p.adminNotes[k].img=null; dropped++; }
     });
   }
+  ["ictMaterials","wyckMaterials"].forEach(function(mk){
+    if(bytes()>95000 && Array.isArray(p[mk])){
+      p[mk]=p[mk].map(function(m){ return Object.assign({},m); });
+      for(let i=p[mk].length-1; i>=0 && bytes()>95000; i--){
+        if(p[mk][i].data){ p[mk][i].data=null; p[mk][i].dataOmitted=true; dropped++; }
+      }
+    }
+  });
   cloudPayload.dropped=dropped;
   return p;
 }
@@ -7650,6 +7642,8 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
     if (!state.homework) state.homework = [];
     if (!state.bookShelf) state.bookShelf = [];
     if (!state.studies) state.studies = [];
+    if (!state.ictMaterials) state.ictMaterials = [];
+    if (!state.wyckMaterials) state.wyckMaterials = [];
     if (!state.submissions) state.submissions = [];
     /* כל ספר שכבר יש לו סיכומים נכנס למדף אוטומטית */
     (state.summaries || []).forEach(function (s) {
@@ -7979,6 +7973,121 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
       });
       box.appendChild(panel);
     });
+  }
+
+  /* ---------- החומרים שלי (ICT / וייקוף): מסמכים, תמונות, קישורים בתוך הדף ---------- */
+  function matKindLabel(k){ return k === "image" ? "תמונה" : k === "pdf" ? "PDF" : k === "link" ? "קישור" : "הערה"; }
+
+  function renderMaterials(stateKey){
+    var box = el(stateKey); if (!box) return;
+    var list = state[stateKey] || [];
+    box.innerHTML = "";
+    if (!list.length){
+      box.innerHTML = "<div class='panel' style='color:var(--muted);font-size:14px;'>עוד לא הוספת חומרים. הוסף מסמך, תמונה או קישור מהטופס למטה.</div>";
+      return;
+    }
+    var isHost = document.body.classList.contains("host");
+    list.forEach(function (m, i){
+      var panel = document.createElement("div"); panel.className = "panel";
+      var inner = "<h3>" + esc(m.title || matKindLabel(m.kind)) + "</h3>";
+      if (m.kind === "image"){
+        inner += m.data
+          ? "<img src='" + esc(m.data) + "' alt='" + esc(m.title || "") + "' loading='lazy' style='max-width:100%;border-radius:10px;border:1px solid var(--line);cursor:zoom-in;' onclick=\"(window.openLightbox||function(){})('" + esc(m.data) + "')\">"
+          : "<div style='color:var(--muted);font-size:13px;'>התמונה נשמרה במכשיר שהעלה אותה (גדולה מדי לסנכרון לענן).</div>";
+      } else if (m.kind === "pdf"){
+        inner += m.data
+          ? "<iframe src='" + esc(m.data) + "' style='width:100%;height:640px;border:1px solid var(--line);border-radius:10px;'></iframe>"
+          : "<div style='color:var(--muted);font-size:13px;'>הקובץ נשמר במכשיר שהעלה אותו (גדול מדי לסנכרון לענן).</div>";
+      } else if (m.kind === "link"){
+        inner += "<div style='margin-bottom:8px;'><a href='" + esc(m.url || "") + "' target='_blank' rel='noopener' style='font-weight:700;'>פתיחת הקישור ↗</a></div>";
+        if (m.embed && m.url) inner += "<iframe src='" + esc(m.url) + "' style='width:100%;height:600px;border:1px solid var(--line);border-radius:10px;'></iframe>";
+      } else if (m.kind === "note"){
+        inner += "<div class='hj-body'>" + esc(m.text || "") + "</div>";
+      }
+      panel.innerHTML = inner;
+      if (isHost){
+        var del = document.createElement("button");
+        del.className = "admin-link host-only"; del.textContent = "מחיקה"; del.style.marginTop = "10px";
+        del.onclick = function (){ state[stateKey].splice(i, 1); persist(); renderMaterials(stateKey); };
+        panel.appendChild(del);
+      }
+      box.appendChild(panel);
+    });
+  }
+
+  function wireMaterials(prefix, stateKey){
+    var host = el(prefix + "MatAdd"); if (!host) return;
+    host.innerHTML =
+      "<h3>➕ הוספת חומר</h3>" +
+      "<div class='form-row'>" +
+        "<div class='field'><label>סוג</label><select id='" + prefix + "MatKind'>" +
+          "<option value='image'>תמונה</option><option value='pdf'>PDF</option>" +
+          "<option value='link'>קישור</option><option value='note'>הערה</option></select></div>" +
+        "<div class='field' style='flex:2;'><label>כותרת</label><input id='" + prefix + "MatTitle' placeholder='שם החומר'></div>" +
+      "</div>" +
+      "<div class='field' id='" + prefix + "MatFileWrap' style='margin-bottom:10px;'><label>בחירת קובץ</label><input type='file' id='" + prefix + "MatFile' accept='image/*'></div>" +
+      "<div class='field' id='" + prefix + "MatUrlWrap' style='margin-bottom:10px;display:none;'><label>כתובת הקישור</label><input id='" + prefix + "MatUrl' placeholder='https://'>" +
+        "<label style='display:flex;align-items:center;gap:6px;font-weight:400;margin-top:6px;'><input type='checkbox' id='" + prefix + "MatEmbed' style='width:auto;'> להציג את הקישור בתוך הדף</label></div>" +
+      "<div class='field' id='" + prefix + "MatTextWrap' style='margin-bottom:10px;display:none;'><label>תוכן ההערה</label><textarea id='" + prefix + "MatText' rows='4'></textarea></div>" +
+      "<button class='btn' id='" + prefix + "MatSave'>הוספה</button>" +
+      "<span id='" + prefix + "MatMsg' style='font-size:13px;margin-inline-start:10px;'></span>";
+
+    var kindSel = el(prefix + "MatKind");
+    function syncKind(){
+      var k = kindSel.value;
+      el(prefix + "MatFileWrap").style.display = (k === "image" || k === "pdf") ? "" : "none";
+      el(prefix + "MatFile").setAttribute("accept", k === "pdf" ? "application/pdf" : "image/*");
+      el(prefix + "MatUrlWrap").style.display = (k === "link") ? "" : "none";
+      el(prefix + "MatTextWrap").style.display = (k === "note") ? "" : "none";
+    }
+    kindSel.onchange = syncKind; syncKind();
+
+    el(prefix + "MatSave").onclick = function (){
+      var k = kindSel.value, title = el(prefix + "MatTitle").value.trim(), msg = el(prefix + "MatMsg");
+      if (!state[stateKey]) state[stateKey] = [];
+      function err(t){ msg.style.color = "var(--red)"; msg.textContent = t; }
+      function commit(item){
+        state[stateKey].unshift(Object.assign({ id: "m" + Date.now(), kind: k, title: title, at: new Date().toISOString() }, item));
+        el(prefix + "MatTitle").value = ""; el(prefix + "MatUrl").value = "";
+        el(prefix + "MatText").value = ""; el(prefix + "MatFile").value = "";
+        msg.style.color = "var(--green)"; msg.textContent = "נוסף ✓";
+        setTimeout(function (){ msg.textContent = ""; }, 2000);
+        persist(); renderMaterials(stateKey);
+      }
+      if (k === "link"){
+        var u = el(prefix + "MatUrl").value.trim();
+        if (!u){ err("חסרה כתובת."); return; }
+        commit({ url: u, embed: el(prefix + "MatEmbed").checked });
+      } else if (k === "note"){
+        var t = el(prefix + "MatText").value.trim();
+        if (!t){ err("ההערה ריקה."); return; }
+        commit({ text: t });
+      } else {
+        var f = el(prefix + "MatFile").files[0];
+        if (!f){ err("לא נבחר קובץ."); return; }
+        if (k === "image"){
+          var r = new FileReader();
+          r.onload = function (ev){
+            var img = new Image();
+            img.onload = function (){
+              var maxW = 1400, scale = Math.min(1, maxW / img.width);
+              var cv = document.createElement("canvas");
+              cv.width = Math.round(img.width * scale); cv.height = Math.round(img.height * scale);
+              cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+              commit({ data: cv.toDataURL("image/jpeg", 0.72) });
+            };
+            img.onerror = function (){ err("קובץ התמונה לא נקרא."); };
+            img.src = ev.target.result;
+          };
+          r.readAsDataURL(f);
+        } else {
+          if (f.size > 3 * 1024 * 1024){ err("PDF גדול מדי — מקסימום 3MB. העלה גרסה קטנה יותר או שים קישור."); return; }
+          var r2 = new FileReader();
+          r2.onload = function (ev){ commit({ data: ev.target.result }); };
+          r2.readAsDataURL(f);
+        }
+      }
+    };
   }
 
   function renderBS() {
@@ -9862,8 +9971,8 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
     renderRoutine(); renderGoal(); renderHabits(); renderMoney();
     renderBS();
     renderIctNarrative();
-    renderLabels(ICT_GROUPS, "ictNotes", "ictList");
-    renderLabels(WYCK_GROUPS, "wyckNotes", "wyckList");
+    renderMaterials("ictMaterials");
+    renderMaterials("wyckMaterials");
     renderAdv(); renderLibLinks(); renderLibBooks(); renderLibToday(); renderLibSubs(); renderNotifBar();
     renderHwList(); renderHwOne(hwRoute()); renderQueue();
     fillBookSelect(); renderShelf(); renderHjTabs(); renderHjList(); renderStudyGrid();
@@ -9938,6 +10047,7 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
 
   function boot() {
     if (typeof state === "undefined") { setTimeout(boot, 200); return; }
+    wireMaterials("ict", "ictMaterials"); wireMaterials("wyck", "wyckMaterials");
     renderAll(); guardLib(); libRoute(); hjRoute(); studyRoute(); applyLock();
     window.addEventListener("hashchange", function () { guardLib(); libRoute(); hjRoute(); studyRoute(); setTimeout(function () { renderAll(); applyLock(); }, 60); });
     window.addEventListener("hs-host-change", function () { setTimeout(renderAll, 60); });
