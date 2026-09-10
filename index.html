@@ -3063,13 +3063,14 @@ AR- הכוח הנגדי החזק ביותר בכלל התיקונים בדרכ �
     <p class="lead">כל קישור כאן נבחר ביד. אם הוא ברשימה — הוא שווה את הזמן שלכם.</p>
     <div class="panel host-only">
       <h3>הוספת קישור</h3>
+      <p style="font-size:13px;color:var(--muted);margin-top:0;">מדביקים כתובת ולוחצים הוספה. הקישור נפתח בתוך האתר עצמו (מסמכי גוגל, יוטיוב, כלים) — בלי לצאת לכרטיסייה אחרת.</p>
+      <div class="field" style="margin-bottom:10px;"><label>כתובת (URL) — מדביקים כאן</label><input id="slUrl" placeholder="https://..."></div>
       <div class="form-row">
         <div class="field"><label>קטגוריה</label>
           <select id="slCat"><option>📚 ספרים</option><option>🎬 סרטונים</option><option>📄 מאמרים</option><option>🛠 כלים</option><option>🔗 אחר</option></select>
         </div>
-        <div class="field" style="flex:2;"><label>שם הקישור</label><input id="slTitle" placeholder="למשל: Trading in the Zone — סיכום"></div>
+        <div class="field" style="flex:2;"><label>שם הקישור (לא חובה — יילקח מהכתובת)</label><input id="slTitle" placeholder="למשל: Trading in the Zone — סיכום"></div>
       </div>
-      <div class="field" style="margin-bottom:10px;"><label>כתובת (URL)</label><input id="slUrl" placeholder="https://..."></div>
       <div class="field" style="margin-bottom:10px;"><label>שורה עליו (לא חובה)</label><input id="slNote" placeholder="למה שווה לפתוח את זה"></div>
       <button class="btn" id="slAdd">הוספה</button>
       <span id="slMsg" style="font-size:13px;color:var(--green);margin-inline-start:8px;"></span>
@@ -6069,11 +6070,21 @@ document.getElementById("inboxClear").addEventListener("click",function(){
 /* ============================================================
    SITE LINKS + TRADING PLAN
    ============================================================ */
+function slTitleFromUrl(url){
+  try{
+    var u=new URL(url);
+    var host=u.hostname.replace(/^www\./,"");
+    var seg=(u.pathname.split("/").filter(Boolean).pop()||"").replace(/[-_]+/g," ").replace(/\.[a-z0-9]{1,5}$/i,"").trim();
+    if(!seg || /^(watch|edit|view|preview|d|embed|index|home)$/i.test(seg) || /^[0-9a-f-]{16,}$/i.test(seg)) return host;
+    return seg;
+  }catch(e){ return url; }
+}
 document.getElementById("slAdd").addEventListener("click",function(){
-  const title=document.getElementById("slTitle").value.trim();
+  let title=document.getElementById("slTitle").value.trim();
   let url=document.getElementById("slUrl").value.trim();
-  if(!title||!url){ document.getElementById("slMsg").textContent="צריך שם וכתובת"; return; }
+  if(!url){ document.getElementById("slMsg").textContent="צריך כתובת"; return; }
   if(!/^https?:\/\//i.test(url)) url="https://"+url;
+  if(!title) title=slTitleFromUrl(url);
   state.siteLinks.push({ id:Date.now(), cat:document.getElementById("slCat").value,
     title:title, url:url, note:document.getElementById("slNote").value.trim() });
   document.getElementById("slTitle").value=""; document.getElementById("slUrl").value=""; document.getElementById("slNote").value="";
@@ -6096,8 +6107,13 @@ function slEmbed(url){
     var m=u.pathname.match(/^\/(spreadsheets|document|presentation)\/d\/([^\/]+)/);
     if(u.hostname.indexOf("docs.google.com")>-1 && m)
       return "https://docs.google.com/"+m[1]+"/d/"+m[2]+"/preview";
+    var mf=u.pathname.match(/^\/file\/d\/([^\/]+)/);
+    if(u.hostname.indexOf("drive.google.com")>-1 && mf)
+      return "https://drive.google.com/file/d/"+mf[1]+"/preview";
     if(u.hostname.indexOf("youtube.com")>-1 && u.searchParams.get("v"))
       return "https://www.youtube.com/embed/"+u.searchParams.get("v");
+    if(u.hostname.indexOf("youtube.com")>-1 && u.pathname.indexOf("/shorts/")===0)
+      return "https://www.youtube.com/embed/"+u.pathname.split("/shorts/")[1];
     if(u.hostname.indexOf("youtu.be")>-1)
       return "https://www.youtube.com/embed"+u.pathname;
     return url;
