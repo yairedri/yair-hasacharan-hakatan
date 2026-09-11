@@ -8016,7 +8016,7 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
           : "<div style='color:var(--muted);font-size:13px;'>הקובץ נשמר במכשיר שהעלה אותו (גדול מדי לסנכרון לענן).</div>";
       } else if (m.kind === "link"){
         inner += "<div style='margin-bottom:8px;'><a href='" + esc(m.url || "") + "' target='_blank' rel='noopener' style='font-weight:700;'>פתיחת הקישור ↗</a></div>";
-        if (m.embed && m.url) inner += "<iframe src='" + esc(m.url) + "' style='width:100%;height:600px;border:1px solid var(--line);border-radius:10px;'></iframe>";
+        if (m.embed && m.url) inner += "<iframe src='" + esc(typeof slEmbed === "function" ? slEmbed(m.url) : m.url) + "' style='width:100%;height:600px;border:1px solid var(--line);border-radius:10px;'></iframe>";
       } else if (m.kind === "note"){
         inner += "<div class='hj-body'>" + esc(m.text || "") + "</div>";
       }
@@ -8034,32 +8034,37 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
   function wireMaterials(prefix, stateKey){
     var host = el(prefix + "MatAdd"); if (!host) return;
     host.innerHTML =
-      "<h3>➕ הוספת חומר</h3>" +
-      "<div class='form-row'>" +
-        "<div class='field'><label>סוג</label><select id='" + prefix + "MatKind'>" +
-          "<option value='image'>תמונה</option><option value='pdf'>PDF</option>" +
-          "<option value='link'>קישור</option><option value='note'>הערה</option></select></div>" +
-        "<div class='field' style='flex:2;'><label>כותרת</label><input id='" + prefix + "MatTitle' placeholder='שם החומר'></div>" +
-      "</div>" +
-      "<div class='field' id='" + prefix + "MatFileWrap' style='margin-bottom:10px;'><label>בחירת קובץ</label><input type='file' id='" + prefix + "MatFile' accept='image/*'></div>" +
-      "<div class='field' id='" + prefix + "MatUrlWrap' style='margin-bottom:10px;display:none;'><label>כתובת הקישור</label><input id='" + prefix + "MatUrl' placeholder='https://'>" +
-        "<label style='display:flex;align-items:center;gap:6px;font-weight:400;margin-top:6px;'><input type='checkbox' id='" + prefix + "MatEmbed' style='width:auto;'> להציג את הקישור בתוך הדף</label></div>" +
-      "<div class='field' id='" + prefix + "MatTextWrap' style='margin-bottom:10px;display:none;'><label>תוכן ההערה</label><textarea id='" + prefix + "MatText' rows='4'></textarea></div>" +
-      "<button class='btn' id='" + prefix + "MatSave'>הוספה</button>" +
-      "<span id='" + prefix + "MatMsg' style='font-size:13px;margin-inline-start:10px;'></span>";
+      "<h3>➕ דחיפת קישור (הכי מהיר)</h3>" +
+      "<p style='font-size:13px;color:var(--muted);margin-top:0;'>מדביקים כתובת ולוחצים הוספה — נפתח בתוך הדף. שם, תמונה, PDF והערה — למטה, לא חובה.</p>" +
+      "<div class='field' style='margin-bottom:10px;'><label>כתובת הקישור</label><input id='" + prefix + "MatUrl' placeholder='https://'></div>" +
+      "<button class='btn' id='" + prefix + "MatQuickAdd'>הוספת קישור</button>" +
+      "<span id='" + prefix + "MatMsg' style='font-size:13px;margin-inline-start:10px;'></span>" +
+      "<details style='margin-top:16px;'><summary style='cursor:pointer;color:var(--muted);font-size:13px;'>עוד סוגים — תמונה, PDF, הערה, כותרת מותאמת</summary>" +
+        "<div style='margin-top:10px;'>" +
+        "<div class='form-row'>" +
+          "<div class='field'><label>סוג</label><select id='" + prefix + "MatKind'>" +
+            "<option value='link'>קישור</option><option value='image'>תמונה</option><option value='pdf'>PDF</option><option value='note'>הערה</option></select></div>" +
+          "<div class='field' style='flex:2;'><label>כותרת (לא חובה)</label><input id='" + prefix + "MatTitle' placeholder='שם החומר'></div>" +
+        "</div>" +
+        "<div class='field' id='" + prefix + "MatFileWrap' style='margin-bottom:10px;display:none;'><label>בחירת קובץ</label><input type='file' id='" + prefix + "MatFile' accept='image/*'></div>" +
+        "<label id='" + prefix + "MatEmbedWrap' style='display:flex;align-items:center;gap:6px;font-weight:400;margin-bottom:10px;'><input type='checkbox' id='" + prefix + "MatEmbed' checked style='width:auto;'> להציג את הקישור בתוך הדף</label>" +
+        "<div class='field' id='" + prefix + "MatTextWrap' style='margin-bottom:10px;display:none;'><label>תוכן ההערה</label><textarea id='" + prefix + "MatText' rows='4'></textarea></div>" +
+        "<button class='btn' id='" + prefix + "MatSave'>הוספה</button>" +
+        "</div>" +
+      "</details>";
 
     var kindSel = el(prefix + "MatKind");
     function syncKind(){
       var k = kindSel.value;
       el(prefix + "MatFileWrap").style.display = (k === "image" || k === "pdf") ? "" : "none";
       el(prefix + "MatFile").setAttribute("accept", k === "pdf" ? "application/pdf" : "image/*");
-      el(prefix + "MatUrlWrap").style.display = (k === "link") ? "" : "none";
+      el(prefix + "MatEmbedWrap").style.display = (k === "link") ? "" : "none";
       el(prefix + "MatTextWrap").style.display = (k === "note") ? "" : "none";
     }
     kindSel.onchange = syncKind; syncKind();
 
-    el(prefix + "MatSave").onclick = function (){
-      var k = kindSel.value, title = el(prefix + "MatTitle").value.trim(), msg = el(prefix + "MatMsg");
+    function doSave(k, urlOverride){
+      var title = el(prefix + "MatTitle").value.trim(), msg = el(prefix + "MatMsg");
       if (!state[stateKey]) state[stateKey] = [];
       function err(t){ msg.style.color = "var(--red)"; msg.textContent = t; }
       function commit(item){
@@ -8071,8 +8076,10 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
         persist(); renderMaterials(stateKey);
       }
       if (k === "link"){
-        var u = el(prefix + "MatUrl").value.trim();
+        var u = (urlOverride != null ? urlOverride : el(prefix + "MatUrl").value.trim());
         if (!u){ err("חסרה כתובת."); return; }
+        if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+        if (!title && typeof slTitleFromUrl === "function") title = slTitleFromUrl(u);
         commit({ url: u, embed: el(prefix + "MatEmbed").checked });
       } else if (k === "note"){
         var t = el(prefix + "MatText").value.trim();
@@ -8103,7 +8110,10 @@ document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeLight
           r2.readAsDataURL(f);
         }
       }
-    };
+    }
+
+    el(prefix + "MatQuickAdd").onclick = function (){ doSave("link"); };
+    el(prefix + "MatSave").onclick = function (){ doSave(kindSel.value); };
   }
 
   function renderBS() {
