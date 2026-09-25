@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מונה תהילים</title>
+<meta name="description" content="מונה תהילים אישי — מגדירים יעד, סופרים פרקים, ולפני כל קריאה נזכרים מה לבקש">
+<style>
+  :root { --blue:#0038b8; --blue2:#1a56db; --light:#eaf1ff; --white:#fff; --ink:#0b1f4d; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Segoe UI",Arial,sans-serif; background:linear-gradient(180deg,var(--blue) 0 14px,var(--white) 14px 28px,var(--light) 28px); color:var(--ink); min-height:100vh; }
+  .wrap { max-width:560px; margin:0 auto; padding:24px 16px 60px; }
+  h1 { text-align:center; color:var(--blue); margin:10px 0 2px; font-size:30px; }
+  .sub { text-align:center; color:#4a5a80; margin-bottom:18px; }
+  .card { background:var(--white); border:2px solid var(--blue); border-radius:16px; padding:18px; margin-bottom:16px; box-shadow:0 4px 14px rgba(0,56,184,.08); }
+  .big { text-align:center; font-size:64px; font-weight:800; color:var(--blue); line-height:1; }
+  .big small { font-size:26px; color:#6b7bb0; font-weight:600; }
+  .bar { height:18px; background:var(--light); border-radius:10px; overflow:hidden; margin:14px 0 6px; border:1px solid #c7d6ff; }
+  .bar div { height:100%; background:linear-gradient(90deg,var(--blue),var(--blue2)); transition:width .3s; }
+  .pct { text-align:center; color:#4a5a80; font-size:14px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+  .stat { background:var(--light); border-radius:12px; padding:10px; text-align:center; }
+  .stat b { display:block; font-size:22px; color:var(--blue); }
+  .stat span { font-size:13px; color:#4a5a80; }
+  .btns { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  button { font-family:inherit; font-size:20px; font-weight:700; border:none; border-radius:12px; padding:16px 0; cursor:pointer; background:var(--blue); color:#fff; }
+  button:active { transform:scale(.97); }
+  button.sec { background:var(--white); color:var(--blue); border:2px solid var(--blue); font-size:16px; padding:10px 0; }
+  .row { display:flex; gap:10px; margin-top:10px; }
+  .row > * { flex:1; }
+  .live { text-align:center; margin-top:12px; color:var(--blue); font-weight:600; min-height:22px; }
+  h2 { margin:0 0 10px; font-size:18px; color:var(--blue); }
+  ul { list-style:none; padding:0; margin:0; }
+  li { padding:8px 0; border-bottom:1px solid #e3eaff; font-size:15px; }
+  li:last-child { border-bottom:none; }
+  li .d { color:#6b7bb0; font-size:12px; display:block; }
+  .empty { color:#8a97bd; font-size:14px; }
+  .modal { position:fixed; inset:0; background:rgba(0,30,100,.55); display:none; align-items:center; justify-content:center; padding:16px; z-index:10; }
+  .modal.on { display:flex; }
+  .box { background:#fff; border-radius:18px; padding:22px; max-width:440px; width:100%; border-top:10px solid var(--blue); }
+  .box h3 { margin:0 0 8px; color:var(--blue); font-size:22px; }
+  .box p { margin:0 0 12px; color:#34446e; line-height:1.5; }
+  textarea { width:100%; min-height:90px; font-family:inherit; font-size:16px; border:2px solid #c7d6ff; border-radius:12px; padding:10px; }
+  input[type=number] { width:100%; font-size:18px; padding:10px; border:2px solid #c7d6ff; border-radius:12px; font-family:inherit; }
+  label { display:block; font-size:14px; color:#34446e; margin:10px 0 4px; }
+  .inp { width:100%; font-size:17px; padding:10px; border:2px solid #c7d6ff; border-radius:12px; font-family:inherit; }
+  .star { text-align:center; font-size:28px; color:var(--blue); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="star">✡</div>
+  <h1><span id="goalT">1500</span> פרקי תהילים</h1>
+  <div class="sub"><span id="purposeT">פרנסה</span> · היעד: <span id="dlT">חנוכה</span> <a href="#" onclick="openSetup();return false" style="color:var(--blue)">⚙️ הגדרות</a></div>
+
+  <div class="card">
+    <div class="big"><span id="count">0</span><small> / <span id="goalB">1500</span></small></div>
+    <div class="bar"><div id="fill"></div></div>
+    <div class="pct" id="pct"></div>
+    <div class="grid">
+      <div class="stat"><b id="left">0</b><span>פרקים נותרו</span></div>
+      <div class="stat"><b id="days">0</b><span>ימים ליעד</span></div>
+      <div class="stat"><b id="perday">0</b><span>פרקים ליום כדי לעמוד ביעד</span></div>
+      <div class="stat"><b id="next">1</b><span id="round">הפרק הבא</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="btns">
+      <button onclick="add(1)">+1</button>
+      <button onclick="add(5)">+5</button>
+      <button onclick="add(10)">+10</button>
+    </div>
+    <div class="row">
+      <button class="sec" onclick="customAdd()">מספר אחר</button>
+      <button class="sec" onclick="undo()">בטל אחרון</button>
+      <button class="sec" onclick="finish()">סיימתי לקרוא</button>
+    </div>
+    <div class="live" id="live"></div>
+  </div>
+
+  <div class="card">
+    <h2>הבקשות שלי</h2>
+    <ul id="reqs"></ul>
+  </div>
+
+  <div class="card" style="text-align:center">
+    <h2>מצטרפים? 💙</h2>
+    <p style="margin:0 0 10px;color:#34446e">שלחו לחברים — כל אחד מקבל מונה משלו</p>
+    <button class="sec" onclick="share()" style="width:100%">📤 שתף את האתר</button>
+    <div class="live" id="shareMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>ישיבות קריאה</h2>
+    <ul id="sess"></ul>
+  </div>
+  <div style="text-align:center;font-size:14px"><a href="./" style="color:var(--blue)">הסחרן הקטן ←</a></div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="box">
+    <h3>לפני שמתחילים 🙏</h3>
+    <p>מלבד <span id="purposeM">הפרנסה</span> שעליה קיבלת את הפרקים —<br><b>מה תרצה לבקש מהקב״ה היום?</b></p>
+    <textarea id="reqText" placeholder="כתוב כאן את הבקשה..."></textarea>
+    <div class="row">
+      <button onclick="startSession(true)">שמור ונתחיל</button>
+      <button class="sec" onclick="startSession(false)">דלג</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="setup">
+  <div class="box">
+    <h3>ההתחייבות שלי</h3>
+    <p>כל אחד מגדיר לעצמו — הנתונים נשמרים רק במכשיר שלך.</p>
+    <label>על מה קיבלת את הפרקים? (למשל: פרנסה, זיווג, רפואה)</label>
+    <input type="text" id="sPurpose" class="inp">
+    <label>כמה פרקים בסך הכול?</label>
+    <input type="number" id="sGoal" min="1">
+    <label>כמה כבר קראת?</label>
+    <input type="number" id="sDone" min="0">
+    <label>עד מתי?</label>
+    <input type="date" id="sDate" class="inp">
+    <div class="row">
+      <button onclick="saveSetup()">שמור</button>
+      <button class="sec" id="sCancel" onclick="closeM('setup')">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="numModal">
+  <div class="box">
+    <h3>כמה פרקים?</h3>
+    <input type="number" id="numIn" min="1" max="150" value="3">
+    <div class="row">
+      <button onclick="confirmNum()">הוסף</button>
+      <button class="sec" onclick="closeM('numModal')">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const GAP = 30 * 60 * 1000; // 30 דק׳ בלי הוספה = ישיבה חדשה
+const KEY = 'tehillim1500';
+
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+const firstVisit = !S;
+if (!S) S = { count: 0, requests: [], sessions: [], cur: null, hist: [] };
+if (!S.goal) Object.assign(S, { goal: 1500, purpose: 'פרנסה', deadline: '2026-12-04' }); // ברירת מחדל: עד חנוכה
+let pending = 0;
+
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+function fmtDate(t) { return new Date(t).toLocaleString('he-IL', { day:'numeric', month:'numeric', hour:'2-digit', minute:'2-digit' }); }
+function mins(ms) { const m = Math.max(1, Math.round(ms / 60000)); return m < 60 ? m + ' דק׳' : Math.floor(m/60) + ' ש׳ ' + (m%60) + ' דק׳'; }
+function esc(s) { return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function closeCur() {
+  if (!S.cur) return;
+  if (S.cur.added > 0) S.sessions.unshift({ start:S.cur.start, end:S.cur.last, added:S.cur.added, request:S.cur.request });
+  S.cur = null; S.hist = [];
+  save();
+}
+
+function checkExpired() {
+  if (S.cur && Date.now() - S.cur.last > GAP) closeCur();
+}
+
+function add(n) {
+  checkExpired();
+  if (!S.cur) { pending = n; openM('modal'); document.getElementById('reqText').focus(); return; }
+  apply(n);
+}
+
+function startSession(withReq) {
+  const txt = document.getElementById('reqText').value.trim();
+  const now = Date.now();
+  S.cur = { start: now, last: now, added: 0, request: withReq && txt ? txt : '' };
+  if (withReq && txt) S.requests.unshift({ t: now, text: txt });
+  document.getElementById('reqText').value = '';
+  closeM('modal');
+  apply(pending);
+}
+
+function apply(n) {
+  S.count += n; S.cur.added += n; S.cur.last = Date.now(); S.hist.push(n);
+  save(); render();
+}
+
+function undo() {
+  if (!S.cur || !S.hist.length) return;
+  const n = S.hist.pop();
+  S.count -= n; S.cur.added -= n;
+  save(); render();
+}
+
+function finish() {
+  if (!S.cur) return;
+  const c = S.cur;
+  closeCur(); render();
+  if (c.added > 0) document.getElementById('live').textContent = `כל הכבוד! ${c.added} פרקים ב־${mins(c.last - c.start)} 💙`;
+}
+
+function customAdd() { openM('numModal'); document.getElementById('numIn').select(); }
+function confirmNum() {
+  const n = parseInt(document.getElementById('numIn').value, 10);
+  closeM('numModal');
+  if (n > 0) add(n);
+}
+function openM(id) { document.getElementById(id).classList.add('on'); }
+function closeM(id) { document.getElementById(id).classList.remove('on'); }
+
+function openSetup() {
+  sPurpose.value = S.purpose; sGoal.value = S.goal; sDone.value = S.count; sDate.value = S.deadline;
+  openM('setup');
+}
+function saveSetup() {
+  S.purpose = sPurpose.value.trim() || 'פרנסה';
+  S.goal = Math.max(1, parseInt(sGoal.value, 10) || 1500);
+  S.count = Math.max(0, parseInt(sDone.value, 10) || 0);
+  S.deadline = sDate.value || S.deadline;
+  S.hist = [];
+  save(); closeM('setup'); render();
+}
+function share() {
+  const url = location.href.split('#')[0];
+  const text = 'מונה תהילים אישי — מגדירים יעד, סופרים פרקים, ולפני כל קריאה נזכרים מה לבקש 💙';
+  if (navigator.share) { navigator.share({ title: 'תהילים', text, url }).catch(() => {}); return; }
+  const done = () => document.getElementById('shareMsg').textContent = 'הקישור הועתק ✓';
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, () => prompt('העתק את הקישור:', url));
+  else prompt('העתק את הקישור:', url);
+}
+
+function render() {
+  checkExpired();
+  const GOAL = S.goal, dl = new Date(S.deadline + 'T17:00');
+  const c = S.count, left = Math.max(0, GOAL - c);
+  const days = Math.max(0, Math.ceil((dl - Date.now()) / 86400000));
+  const isHanukkah = S.deadline === '2026-12-04';
+  document.getElementById('goalT').textContent = GOAL;
+  document.getElementById('goalB').textContent = GOAL;
+  document.getElementById('purposeT').textContent = S.purpose;
+  document.getElementById('purposeM').textContent = S.purpose;
+  document.getElementById('dlT').textContent = isHanukkah ? 'חנוכה' : dl.toLocaleDateString('he-IL');
+  document.getElementById('count').textContent = c;
+  document.getElementById('fill').style.width = Math.min(100, c / GOAL * 100) + '%';
+  document.getElementById('pct').textContent = (c / GOAL * 100).toFixed(1) + '% הושלמו';
+  document.getElementById('left').textContent = left;
+  document.getElementById('days').textContent = days;
+  document.getElementById('perday').textContent = left === 0 ? '✓' : days ? Math.ceil(left / days) : left;
+  document.getElementById('next').textContent = 'פרק ' + (c % 150 + 1);
+  const rounds = Math.ceil(GOAL / 150);
+  document.getElementById('round').textContent = 'סבב ' + Math.min(rounds, Math.floor(c / 150) + 1) + ' מתוך ' + rounds;
+
+  const live = document.getElementById('live');
+  if (S.cur) live.textContent = `ישיבה פעילה: ${S.cur.added} פרקים · ${mins(Date.now() - S.cur.start)}`;
+  else if (!live.textContent.startsWith('כל הכבוד')) live.textContent = '';
+
+  const r = document.getElementById('reqs');
+  r.innerHTML = S.requests.length ? S.requests.map(x => `<li>${esc(x.text)}<span class="d">${fmtDate(x.t)}</span></li>`).join('') : '<li class="empty">עוד אין בקשות — תתווסף בתחילת הקריאה הבאה</li>';
+  const s = document.getElementById('sess');
+  s.innerHTML = S.sessions.length ? S.sessions.slice(0, 30).map(x => `<li><b>${x.added}</b> פרקים · ${mins(x.end - x.start)}<span class="d">${fmtDate(x.start)}${x.request ? ' · ' + esc(x.request) : ''}</span></li>`).join('') : '<li class="empty">עוד לא נרשמו ישיבות</li>';
+}
+
+document.getElementById('numIn').addEventListener('keydown', e => { if (e.key === 'Enter') confirmNum(); });
+render();
+setInterval(render, 30000);
+if (firstVisit) openSetup();
+</script>
+</body>
+</html>
